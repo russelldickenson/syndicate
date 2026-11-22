@@ -19,6 +19,7 @@ data class FeedsUiState(
     val showConfirmFeedDialog: Boolean = false,
     val feedPreviewTitle: String = "",
     val feedPreviewUrl: String = "",
+    val duplicateFeedId: String? = null,
     val tagEditorFeedId: String? = null,
     val tagEditorFeedTitle: String = "",
     val newTagNameInput: String = "",

@@ -10,6 +10,7 @@ import com.zigzag.rssreader.core.database.model.FeedEntity
 import com.zigzag.rssreader.core.database.model.FeedTagCrossRef
 import com.zigzag.rssreader.core.database.model.TagEntity
 import com.zigzag.rssreader.core.domain.model.Feed
+import com.zigzag.rssreader.core.domain.model.FeedAlreadyExistsException
 import com.zigzag.rssreader.core.domain.model.FeedPreview
 import com.zigzag.rssreader.core.domain.model.FeedRefreshError
 import com.zigzag.rssreader.core.domain.model.FeedSort
@@ -63,7 +64,9 @@ class FeedRepositoryImpl @Inject constructor(
     override suspend fun previewFeed(url: String): Result<FeedPreview> = withContext(dispatchers.io) {
         runCatching {
             val (normalized, uri) = normalizeFeedUrl(url)
-            require(feedDao.feedByUrl(normalized) == null) { "This feed has already been added" }
+            feedDao.feedByUrl(normalized)?.let { existing ->
+                throw FeedAlreadyExistsException(existing.id, existing.title)
+            }
 
             val parsed = fetcher.fetch(normalized)
             FeedPreview(
@@ -78,7 +81,9 @@ class FeedRepositoryImpl @Inject constructor(
     override suspend fun addFeed(preview: FeedPreview): Result<Feed> = withContext(dispatchers.io) {
         runCatching {
             val (normalized, uri) = normalizeFeedUrl(preview.url)
-            require(feedDao.feedByUrl(normalized) == null) { "This feed has already been added" }
+            feedDao.feedByUrl(normalized)?.let { existing ->
+                throw FeedAlreadyExistsException(existing.id, existing.title)
+            }
 
             val parsed = fetcher.fetch(normalized)
             val id = normalized.hashCode().toString()

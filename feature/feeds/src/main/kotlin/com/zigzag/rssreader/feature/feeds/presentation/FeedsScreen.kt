@@ -30,6 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -161,12 +167,17 @@ internal fun FeedsScreen(
         )
     }
 
+    val viewFeed: (String) -> Unit = { feedId ->
+        viewModel.dismissAddFeedDialog()
+        onNavigateToArticles(ArticleScope.ForFeed(feedId))
+    }
+
     if (state.showAddFeedDialog) {
-        AddFeedDialog(state = state, viewModel = viewModel)
+        AddFeedDialog(state = state, viewModel = viewModel, onViewFeed = viewFeed)
     }
 
     if (state.showConfirmFeedDialog) {
-        ConfirmFeedDialog(state = state, viewModel = viewModel)
+        ConfirmFeedDialog(state = state, viewModel = viewModel, onViewFeed = viewFeed)
     }
 
     state.tagEditorFeedId?.let { feedId ->
@@ -211,7 +222,11 @@ private fun FeedList(
 }
 
 @Composable
-private fun AddFeedDialog(state: FeedsUiState, viewModel: FeedsViewModel) {
+private fun AddFeedDialog(
+    state: FeedsUiState,
+    viewModel: FeedsViewModel,
+    onViewFeed: (String) -> Unit,
+) {
     AlertDialog(
         onDismissRequest = viewModel::dismissAddFeedDialog,
         title = { Text("Add feed") },
@@ -224,7 +239,11 @@ private fun AddFeedDialog(state: FeedsUiState, viewModel: FeedsViewModel) {
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (state.error != null) {
+                state.duplicateFeedId?.let { feedId ->
+                    Spacer(Modifier.height(8.dp))
+                    DuplicateFeedMessage(feedId = feedId, onViewFeed = onViewFeed)
+                }
+                if (state.duplicateFeedId == null && state.error != null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = state.error.orEmpty(),
@@ -247,7 +266,32 @@ private fun AddFeedDialog(state: FeedsUiState, viewModel: FeedsViewModel) {
 }
 
 @Composable
-private fun ConfirmFeedDialog(state: FeedsUiState, viewModel: FeedsViewModel) {
+private fun DuplicateFeedMessage(
+    feedId: String,
+    onViewFeed: (String) -> Unit,
+) {
+    val message = buildAnnotatedString {
+        append("You’re already subscribed to that feed.\n")
+        withLink(LinkAnnotation.Clickable(tag = "view_feed") { onViewFeed(feedId) }) {
+            withStyle(
+                SpanStyle(
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                ),
+            ) {
+                append("View feed →")
+            }
+        }
+    }
+    Text(text = message, style = MaterialTheme.typography.bodySmall)
+}
+
+@Composable
+private fun ConfirmFeedDialog(
+    state: FeedsUiState,
+    viewModel: FeedsViewModel,
+    onViewFeed: (String) -> Unit,
+) {
     AlertDialog(
         onDismissRequest = viewModel::backToFeedUrl,
         title = { Text("Add this feed?") },
@@ -263,7 +307,11 @@ private fun ConfirmFeedDialog(state: FeedsUiState, viewModel: FeedsViewModel) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (state.error != null) {
+                state.duplicateFeedId?.let { feedId ->
+                    Spacer(Modifier.height(8.dp))
+                    DuplicateFeedMessage(feedId = feedId, onViewFeed = onViewFeed)
+                }
+                if (state.duplicateFeedId == null && state.error != null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = state.error.orEmpty(),

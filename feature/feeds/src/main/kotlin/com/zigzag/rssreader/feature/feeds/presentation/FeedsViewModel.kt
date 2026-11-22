@@ -3,6 +3,7 @@ package com.zigzag.rssreader.feature.feeds.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.Feed
+import com.zigzag.rssreader.core.domain.model.FeedAlreadyExistsException
 import com.zigzag.rssreader.core.domain.model.FeedPreview
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.Tag
@@ -65,6 +66,7 @@ class FeedsViewModel @Inject constructor(
                 showConfirmFeedDialog = dialogState.showConfirmFeed,
                 feedPreviewTitle = dialogState.feedPreview?.title.orEmpty(),
                 feedPreviewUrl = dialogState.feedPreview?.url.orEmpty(),
+                duplicateFeedId = dialogState.duplicateFeed?.id,
                 tagEditorFeedId = dialogState.tagEditorFeedId,
                 tagEditorFeedTitle = dialogState.tagEditorFeedTitle,
                 newTagNameInput = dialogState.newTagNameInput,
@@ -107,10 +109,7 @@ class FeedsViewModel @Inject constructor(
                         )
                     }
                 },
-                onFailure = { throwable ->
-                    errorMessage.value = "Couldn't add feed: ${throwable.message.orUnknown()}"
-                    dialog.updateCopy { copy(isSaving = false) }
-                },
+                onFailure = ::handleAddFailure,
             )
         }
     }
@@ -124,10 +123,7 @@ class FeedsViewModel @Inject constructor(
                     errorMessage.value = null
                     dialog.value = FeedsDialogState()
                 },
-                onFailure = { throwable ->
-                    errorMessage.value = "Couldn't add feed: ${throwable.message.orUnknown()}"
-                    dialog.updateCopy { copy(isSaving = false) }
-                },
+                onFailure = ::handleAddFailure,
             )
         }
     }
@@ -139,6 +135,7 @@ class FeedsViewModel @Inject constructor(
                 showAddFeed = true,
                 showConfirmFeed = false,
                 feedPreview = null,
+                duplicateFeed = null,
                 isSaving = false,
             )
         }
@@ -238,12 +235,18 @@ class FeedsViewModel @Inject constructor(
     fun dismissAddFeedDialog() {
         errorMessage.value = null
         dialog.updateCopy {
-            copy(showAddFeed = false, showConfirmFeed = false, feedPreview = null, isSaving = false)
+            copy(
+                showAddFeed = false,
+                showConfirmFeed = false,
+                feedPreview = null,
+                duplicateFeed = null,
+                isSaving = false,
+            )
         }
     }
 
     fun onFeedUrlChanged(value: String) {
-        dialog.updateCopy { copy(feedUrlInput = value) }
+        dialog.updateCopy { copy(feedUrlInput = value, duplicateFeed = null) }
     }
 
     fun openTagEditor(feed: Feed) {
@@ -281,6 +284,21 @@ class FeedsViewModel @Inject constructor(
         errorMessage.value = null
     }
 
+    private fun handleAddFailure(throwable: Throwable) {
+        if (throwable is FeedAlreadyExistsException) {
+            errorMessage.value = null
+            dialog.updateCopy {
+                copy(
+                    duplicateFeed = DuplicateFeed(throwable.feedId),
+                    isSaving = false,
+                )
+            }
+        } else {
+            errorMessage.value = "Couldn't add feed: ${throwable.message.orUnknown()}"
+            dialog.updateCopy { copy(isSaving = false) }
+        }
+    }
+
     private fun persistSettings(transform: (UserSettings) -> UserSettings) {
         viewModelScope.launch {
             runCatching { settingsRepository.updateSettings(transform) }
@@ -305,11 +323,14 @@ class FeedsViewModel @Inject constructor(
 
     private data class StatusData(val isRefreshing: Boolean, val error: String?)
 
+    private data class DuplicateFeed(val id: String)
+
     private data class FeedsDialogState(
         val showAddFeed: Boolean = false,
         val showConfirmFeed: Boolean = false,
         val feedUrlInput: String = "",
         val feedPreview: FeedPreview? = null,
+        val duplicateFeed: DuplicateFeed? = null,
         val tagEditorFeedId: String? = null,
         val tagEditorFeedTitle: String = "",
         val newTagNameInput: String = "",
