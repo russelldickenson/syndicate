@@ -18,7 +18,7 @@ class DateTimeFormattingTest {
             locale = Locale.US,
         )
 
-        assertEquals("11/23/26, 3:30\u202FAM", formatted)
+        assertEquals("11/23/26, 3:30 AM", formatted.normalizeSpaces())
     }
 
     @Test
@@ -31,7 +31,7 @@ class DateTimeFormattingTest {
             locale = Locale.US,
         )
 
-        assertEquals("11/22/26, 6:30\u202FPM", formatted)
+        assertEquals("11/22/26, 6:30 PM", formatted.normalizeSpaces())
     }
 
     @Test
@@ -44,6 +44,10 @@ class DateTimeFormattingTest {
             locale = Locale.GERMANY,
         )
 
-        assertEquals("23.11.26, 09:30", formatted)
+        assertEquals("23.11.26, 09:30", formatted.normalizeSpaces())
     }
+
+    // CLDR uses either a plain space or a narrow no-break space before AM/PM
+    // depending on the JDK's locale data.
+    private fun String.normalizeSpaces(): String = replace('\u202F', ' ')
 }
