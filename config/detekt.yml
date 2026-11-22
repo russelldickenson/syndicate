@@ -1,0 +1,3 @@
+# Detekt configuration.
+# Defaults are supplied by the Detekt plugin (buildUponDefaultConfig = true).
+# Project-specific overrides can be added here using Detekt 2 property names.
