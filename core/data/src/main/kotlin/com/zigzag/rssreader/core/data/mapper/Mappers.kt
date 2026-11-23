@@ -49,10 +49,14 @@ internal fun TagRow.toDomain(): Tag = Tag(
     unreadCount = unreadCount,
 )
 
-internal fun ArticleEntity.toDomain(feedTitle: String): Article = Article(
+internal fun ArticleEntity.toDomain(
+    feedTitle: String,
+    feedSiteUrl: String? = null,
+): Article = Article(
     id = id,
     feedId = feedId,
     feedTitle = feedTitle,
+    feedSiteUrl = feedSiteUrl,
     title = title,
     link = link,
     author = author,

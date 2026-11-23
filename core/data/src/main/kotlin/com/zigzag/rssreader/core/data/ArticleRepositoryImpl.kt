@@ -46,9 +46,13 @@ class ArticleRepositoryImpl @Inject constructor(
         ),
         feedDao.observeFeedTitles(),
     ) { entities, feedTitles ->
-        val titles = feedTitles.associate { it.id to it.title }
+        val feeds = feedTitles.associateBy { it.id }
         val articles = entities.map { entity ->
-            entity.toDomain(titles[entity.feedId].orEmpty())
+            val feed = feeds[entity.feedId]
+            entity.toDomain(
+                feedTitle = feed?.title.orEmpty(),
+                feedSiteUrl = feed?.let { it.siteUrl ?: it.url },
+            )
         }
         sortArticles(articles, sort)
     }
@@ -57,7 +61,11 @@ class ArticleRepositoryImpl @Inject constructor(
         articleDao.observeArticle(articleId),
         feedDao.observeFeedTitles(),
     ) { entity, feedTitles ->
-        entity?.toDomain(feedTitles.firstOrNull { it.id == entity.feedId }?.title.orEmpty())
+        val feed = feedTitles.firstOrNull { it.id == entity?.feedId }
+        entity?.toDomain(
+            feedTitle = feed?.title.orEmpty(),
+            feedSiteUrl = feed?.let { it.siteUrl ?: it.url },
+        )
     }
 
     override suspend fun markRead(articleId: String) {

@@ -48,6 +48,8 @@ data class TagUnreadRow(
 data class FeedTitleRow(
     val id: String,
     val title: String,
+    val siteUrl: String?,
+    val url: String,
 )
 
 @Dao
@@ -123,7 +125,7 @@ interface FeedDao {
     )
     fun observeTagUnread(): Flow<List<TagUnreadRow>>
 
-    @Query("SELECT id AS id, title AS title FROM feeds")
+    @Query("SELECT id AS id, title AS title, siteUrl AS siteUrl, url AS url FROM feeds")
     fun observeFeedTitles(): Flow<List<FeedTitleRow>>
 
     @Query("SELECT * FROM feeds WHERE id = :id")

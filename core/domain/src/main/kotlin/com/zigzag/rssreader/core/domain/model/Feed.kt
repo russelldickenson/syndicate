@@ -32,6 +32,7 @@ data class Article(
     val id: String,
     val feedId: String,
     val feedTitle: String,
+    val feedSiteUrl: String? = null,
     val title: String,
     val link: String,
     val author: String? = null,

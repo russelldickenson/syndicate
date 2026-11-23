@@ -7,17 +7,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.domain.model.Tag
@@ -103,6 +113,8 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
         MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
     }
     val dateLabel = article.publishedAt?.let(::formatArticleDateTime).orEmpty()
+    val faviconBaseUrl = article.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article.link
+    val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
 
     Surface(
         modifier = Modifier
@@ -121,6 +133,16 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (faviconUrls != null) {
+                    ArticleFavicon(
+                        primaryUrl = faviconUrls.first,
+                        fallbackUrl = faviconUrls.second,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
                 Text(
                     text = article.feedTitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -142,6 +164,60 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
             }
         }
     }
+}
+
+/**
+ * The favicon URLs to try for a site: `<scheme>://<host>/favicon.ico` first, then
+ * DuckDuckGo's icon service, which covers sites that do not serve a root favicon.
+ * Null when the site's host cannot be determined.
+ */
+private fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
+    val primary = faviconUrl(baseUrl) ?: return null
+    val fallback = iconServiceUrl(baseUrl) ?: return primary to primary
+    return primary to fallback
+}
+
+@Composable
+private fun ArticleFavicon(
+    primaryUrl: String,
+    fallbackUrl: String,
+    modifier: Modifier = Modifier,
+) {
+    var url by remember(primaryUrl) { mutableStateOf(primaryUrl) }
+    var usedFallback by remember(primaryUrl) { mutableStateOf(false) }
+    AsyncImage(
+        model = url,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = ContentScale.Crop,
+        onState = { state ->
+            if (state is AsyncImagePainter.State.Error && !usedFallback && fallbackUrl != primaryUrl) {
+                usedFallback = true
+                url = fallbackUrl
+            }
+        },
+    )
+}
+
+private fun faviconUrl(baseUrl: String?): String? {
+    val trimmed = baseUrl?.trim().orEmpty()
+    if (trimmed.isEmpty()) return null
+    val host = hostOf(trimmed) ?: return null
+    val scheme = if (trimmed.startsWith("http://", ignoreCase = true)) "http" else "https"
+    return "$scheme://$host/favicon.ico"
+}
+
+private fun iconServiceUrl(baseUrl: String?): String? =
+    hostOf(baseUrl)?.let { "https://icons.duckduckgo.com/ip3/$it.ico" }
+
+private fun hostOf(baseUrl: String?): String? {
+    val trimmed = baseUrl?.trim().orEmpty()
+    if (trimmed.isEmpty()) return null
+    val candidate = if (trimmed.contains("://")) trimmed else "https://$trimmed"
+    return runCatching { URI(candidate) }
+        .getOrNull()
+        ?.host
+        ?.takeIf { it.isNotBlank() }
 }
 
 private fun hostFromUrl(url: String): String =
