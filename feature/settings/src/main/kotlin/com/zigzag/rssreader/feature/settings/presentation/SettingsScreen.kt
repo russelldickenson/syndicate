@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -72,13 +75,27 @@ internal fun SettingsScreen(
                 .fillMaxSize(),
         ) {
             item(key = "theme_header") { SectionHeader("Theme") }
-            ThemeMode.entries.forEach { mode ->
-                item(key = "theme_${mode.name}") {
-                    PreferenceRow(
-                        label = mode.label,
-                        selected = settings.themeMode == mode,
-                        onClick = { viewModel.setThemeMode(mode) },
-                    )
+            item(key = "theme_selector") {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    ThemeMode.entries.forEach { mode ->
+                        SegmentedButton(
+                            selected = settings.themeMode == mode,
+                            onClick = { viewModel.setThemeMode(mode) },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = mode.ordinal,
+                                count = ThemeMode.entries.size,
+                            ),
+                        ) {
+                            Text(
+                                text = mode.label,
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                    }
                 }
             }
 
