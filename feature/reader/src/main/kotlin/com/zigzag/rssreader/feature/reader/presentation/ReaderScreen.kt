@@ -122,6 +122,8 @@ internal fun ReaderScreen(
                                 settings.javaScriptEnabled = false
                                 settings.domStorageEnabled = false
                                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                                settings.useWideViewPort = false
+                                settings.loadWithOverviewMode = true
                                 webViewClient = object : WebViewClient() {
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         isLoading = false
@@ -135,7 +137,7 @@ internal fun ReaderScreen(
                                 if (!html.isNullOrBlank()) {
                                     webView.loadDataWithBaseURL(
                                         link,
-                                        html.orEmpty(),
+                                        prepareArticleHtml(html.orEmpty()),
                                         "text/html",
                                         "UTF-8",
                                         null,

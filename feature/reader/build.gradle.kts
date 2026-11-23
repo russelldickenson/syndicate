@@ -7,3 +7,7 @@ plugins {
 android {
     namespace = "com.zigzag.rssreader.feature.reader"
 }
+
+dependencies {
+    testImplementation(libs.findBundle("unit-test").get())
+}
