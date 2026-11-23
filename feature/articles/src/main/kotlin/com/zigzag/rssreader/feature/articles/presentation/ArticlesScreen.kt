@@ -6,8 +6,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -32,12 +43,14 @@ import com.zigzag.rssreader.core.ui.components.EmptyState
 import com.zigzag.rssreader.core.ui.components.ErrorMessage
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
 import com.zigzag.rssreader.core.ui.components.SortSheet
+import com.zigzag.rssreader.feature.articles.R
 
 @Composable
 fun ArticlesRoute(
     scope: ArticleScope,
-    onOpenArticle: (String) -> Unit,
+    onOpenArticles: (List<String>, Int) -> Unit,
     onNavigateToFeeds: () -> Unit,
+    onOpenDrawer: () -> Unit,
     title: String? = null,
 ) {
     val viewModel: ArticlesViewModel = hiltViewModel()
@@ -48,8 +61,9 @@ fun ArticlesRoute(
         state = state,
         viewModel = viewModel,
         routeTitle = title,
-        onOpenArticle = onOpenArticle,
+        onOpenArticles = onOpenArticles,
         onNavigateToFeeds = onNavigateToFeeds,
+        onOpenDrawer = onOpenDrawer,
     )
 }
 
@@ -58,8 +72,9 @@ internal fun ArticlesScreen(
     state: ArticlesUiState,
     viewModel: ArticlesViewModel,
     routeTitle: String?,
-    onOpenArticle: (String) -> Unit,
+    onOpenArticles: (List<String>, Int) -> Unit,
     onNavigateToFeeds: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
     var showSortSheet by remember { mutableStateOf(false) }
     val displayTitle = routeTitle ?: state.scopeTitle
@@ -68,21 +83,55 @@ internal fun ArticlesScreen(
         topBar = {
             TopAppBar(
                 title = { Text(displayTitle) },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onOpenDrawer,
+                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                    ) { Text("☰") }
+                },
                 actions = {
-                    TextButton(
+                    FilterChip(
+                        selected = state.unreadOnly,
                         onClick = viewModel::toggleUnreadOnly,
+                        label = {
+                            Icon(
+                                painter = painterResource(R.drawable.feature_articles_ic_unread),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
                         modifier = Modifier.semantics {
                             contentDescription = if (state.unreadOnly) "Show all articles" else "Show unread only"
                         },
-                    ) { Text(if (state.unreadOnly) "All" else "Unread") }
-                    IconButton(
-                        onClick = viewModel::markAllRead,
+                        border = null,
+                        colors = FilterChipDefaults.filterChipColors(),
+                    )
+                    AssistChip(
+                        onClick = viewModel::showMarkAllReadConfirmation,
+                        label = {
+                            Icon(
+                                painter = painterResource(R.drawable.feature_articles_ic_mark_read),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
                         modifier = Modifier.semantics { contentDescription = "Mark all as read" },
-                    ) { Text("✓") }
-                    IconButton(
+                        colors = AssistChipDefaults.assistChipColors(),
+                        border = null,
+                    )
+                    AssistChip(
                         onClick = { showSortSheet = true },
+                        label = {
+                            Icon(
+                                painter = painterResource(R.drawable.feature_articles_ic_sort),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
                         modifier = Modifier.semantics { contentDescription = "Sort articles" },
-                    ) { Text("⇅") }
+                        colors = AssistChipDefaults.assistChipColors(),
+                        border = null,
+                    )
                 },
             )
         },
@@ -110,12 +159,30 @@ internal fun ArticlesScreen(
                     onAction = onNavigateToFeeds,
                 )
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(items = state.articles, key = { it.id }) { article ->
+                // Always open at the top of the list: a plain LazyColumn would restore the
+                // previous scroll offset when the activity (or saved back stack) is restored,
+                // which shows the most-recently-loaded articles at the bottom on startup.
+                val listState = rememberLazyListState()
+                // Always open at the top of the list: a plain LazyColumn would restore the
+                // previous scroll offset when the activity (or saved back stack) is restored,
+                // which shows the most-recently-loaded articles at the bottom on startup.
+                // Reset whenever the underlying article set changes (new scope, refresh), but
+                // leave the user's scroll alone otherwise.
+                LaunchedEffect(state.articles) {
+                    if (state.articles.isNotEmpty()) listState.scrollToItem(0)
+                }
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    itemsIndexed(
+                        items = state.articles,
+                        key = { _, article -> article.id },
+                    ) { index, article ->
                         Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                             ArticleRow(
                                 article = article,
-                                onRead = { onOpenArticle(article.id) },
+                                onRead = { onOpenArticles(state.articles.map { it.id }, index) },
                             )
                         }
                     }
@@ -135,6 +202,20 @@ internal fun ArticlesScreen(
             onSelect = viewModel::setSort,
             label = { it.label },
             onDismiss = { showSortSheet = false },
+        )
+    }
+
+    if (state.showConfirmMarkAllRead) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissMarkAllReadConfirmation,
+            title = { Text("Mark all as read?") },
+            text = { Text("This marks every article in this view as read. They stay in the list, but unread-only view will be empty afterwards.") },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmMarkAllRead) { Text("Mark all read") }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissMarkAllReadConfirmation) { Text("Cancel") }
+            },
         )
     }
 }

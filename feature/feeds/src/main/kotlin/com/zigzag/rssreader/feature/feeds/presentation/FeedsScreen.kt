@@ -55,6 +55,7 @@ import com.zigzag.rssreader.core.ui.components.TagRow
 fun FeedsRoute(
     onNavigateToArticles: (scope: ArticleScope) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
     val viewModel: FeedsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,6 +65,7 @@ fun FeedsRoute(
         viewModel = viewModel,
         onNavigateToArticles = onNavigateToArticles,
         onNavigateToSettings = onNavigateToSettings,
+        onOpenDrawer = onOpenDrawer,
     )
 }
 
@@ -73,6 +75,7 @@ internal fun FeedsScreen(
     viewModel: FeedsViewModel,
     onNavigateToArticles: (ArticleScope) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
     var showFeedSortSheet by remember { mutableStateOf(false) }
     var showTagSortSheet by remember { mutableStateOf(false) }
@@ -81,6 +84,12 @@ internal fun FeedsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Feeds") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onOpenDrawer,
+                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                    ) { Text("☰") }
+                },
                 actions = {
                     IconButton(
                         onClick = { showFeedSortSheet = true },

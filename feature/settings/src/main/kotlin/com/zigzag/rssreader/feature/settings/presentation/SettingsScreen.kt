@@ -34,14 +34,14 @@ import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.SortSheet
 
 @Composable
-fun SettingsRoute(onNavigateBack: () -> Unit) {
+fun SettingsRoute(onOpenDrawer: () -> Unit) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
     SettingsScreen(
         settings = settings,
         viewModel = viewModel,
-        onNavigateBack = onNavigateBack,
+        onOpenDrawer = onOpenDrawer,
     )
 }
 
@@ -49,19 +49,19 @@ fun SettingsRoute(onNavigateBack: () -> Unit) {
 internal fun SettingsScreen(
     settings: UserSettings,
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
     var sortSheet by remember { mutableStateOf<SortKind?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("RSS Reeder") },
                 navigationIcon = {
                     IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.semantics { contentDescription = "Back" },
-                    ) { Text("←") }
+                        onClick = onOpenDrawer,
+                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                    ) { Text("☰") }
                 },
             )
         },
