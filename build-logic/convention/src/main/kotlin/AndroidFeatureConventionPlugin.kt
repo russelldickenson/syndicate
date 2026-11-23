@@ -28,6 +28,8 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 // Compose UI
                 libs.findBundle("compose").ifPresent { add("implementation", it) }
                 add("implementation", libs.findLibrary("androidx.compose.material3").get())
+                add("implementation", libs.findLibrary("androidx-compose-material-icons-core").get())
+                add("implementation", libs.findLibrary("androidx-compose-material-icons-extended").get())
 
                 // Core dependencies
                 add("implementation", project(":core:ui"))

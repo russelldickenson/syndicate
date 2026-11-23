@@ -12,6 +12,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MarkEmailRead
+import androidx.compose.material.icons.filled.MarkEmailUnread
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -30,7 +35,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -87,15 +91,16 @@ internal fun ArticlesScreen(
                     IconButton(
                         onClick = onOpenDrawer,
                         modifier = Modifier.semantics { contentDescription = "Open navigation" },
-                    ) { Text("☰") }
+                    ) { Icon(Icons.Filled.Menu, contentDescription = null) }
                 },
                 actions = {
                     FilterChip(
                         selected = state.unreadOnly,
                         onClick = viewModel::toggleUnreadOnly,
-                        label = {
+                        label = {},
+                        leadingIcon = {
                             Icon(
-                                painter = painterResource(R.drawable.feature_articles_ic_unread),
+                                imageVector = Icons.Filled.MarkEmailUnread,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -108,9 +113,10 @@ internal fun ArticlesScreen(
                     )
                     AssistChip(
                         onClick = viewModel::showMarkAllReadConfirmation,
-                        label = {
+                        label = {},
+                        leadingIcon = {
                             Icon(
-                                painter = painterResource(R.drawable.feature_articles_ic_mark_read),
+                                imageVector = Icons.Filled.MarkEmailRead,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -121,9 +127,10 @@ internal fun ArticlesScreen(
                     )
                     AssistChip(
                         onClick = { showSortSheet = true },
-                        label = {
+                        label = {},
+                        leadingIcon = {
                             Icon(
-                                painter = painterResource(R.drawable.feature_articles_ic_sort),
+                                imageVector = Icons.Filled.Sort,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                             )

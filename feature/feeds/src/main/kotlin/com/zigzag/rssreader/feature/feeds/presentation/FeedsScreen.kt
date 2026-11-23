@@ -11,9 +11,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -88,26 +95,26 @@ internal fun FeedsScreen(
                     IconButton(
                         onClick = onOpenDrawer,
                         modifier = Modifier.semantics { contentDescription = "Open navigation" },
-                    ) { Text("☰") }
+                    ) { Icon(Icons.Filled.Menu, contentDescription = null) }
                 },
                 actions = {
                     IconButton(
                         onClick = { showFeedSortSheet = true },
                         modifier = Modifier.semantics { contentDescription = "Sort feeds" },
-                    ) { Text("⇅") }
+                    ) { Icon(Icons.Filled.Sort, contentDescription = null) }
                     IconButton(
                         onClick = { showTagSortSheet = true },
                         modifier = Modifier.semantics { contentDescription = "Sort tags" },
-                    ) { Text("↕") }
+                    ) { Icon(Icons.Filled.SwapVert, contentDescription = null) }
                     IconButton(
                         onClick = viewModel::refreshAll,
                         enabled = !state.isRefreshing,
                         modifier = Modifier.semantics { contentDescription = "Refresh feeds" },
-                    ) { Text("↻") }
+                    ) { Icon(Icons.Filled.Refresh, contentDescription = null) }
                     IconButton(
                         onClick = onNavigateToSettings,
                         modifier = Modifier.semantics { contentDescription = "Settings" },
-                    ) { Text("⚙") }
+                    ) { Icon(Icons.Filled.Settings, contentDescription = null) }
                 },
             )
         },
