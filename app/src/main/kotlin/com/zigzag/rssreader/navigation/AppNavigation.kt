@@ -125,102 +125,112 @@ fun AppNavigation() {
         }
     }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            item(
-                icon = { Text("☰") },
-                label = { Text("All") },
-                selected = backStack.lastOrNull() == AppDestination.ArticlesAll,
-                onClick = { navigateTop(AppDestination.ArticlesAll) },
+    val entries = entryProvider<NavKey> {
+        entry<AppDestination.ArticlesAll> {
+            ArticlesRoute(
+                scope = ArticleScope.All,
+                title = "All articles",
+                onOpenArticle = ::openArticle,
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
             )
-            item(
-                icon = { Text("★") },
-                label = { Text("Unread") },
-                badge = {
-                    val count = drawerState.unreadCounts.global
-                    if (count > 0) UnreadBadge(count = count)
-                },
-                selected = backStack.lastOrNull() == AppDestination.ArticlesUnread,
-                onClick = { navigateTop(AppDestination.ArticlesUnread) },
+        }
+        entry<AppDestination.ArticlesUnread> {
+            ArticlesRoute(
+                scope = ArticleScope.Unread,
+                title = "Unread",
+                onOpenArticle = ::openArticle,
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
             )
-            item(
-                icon = { Text("⚑") },
-                label = { Text("Feeds") },
-                selected = backStack.lastOrNull() == AppDestination.Feeds,
-                onClick = { navigateTop(AppDestination.Feeds) },
+        }
+        entry<AppDestination.TagArticles> { key ->
+            ArticlesRoute(
+                scope = ArticleScope.ForTag(key.tagId),
+                title = key.title,
+                onOpenArticle = ::openArticle,
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
             )
-            drawerState.tags.forEach { tag ->
-                item(
-                    icon = { Text("#") },
-                    label = { Text(tag.name) },
-                    badge = { UnreadBadge(count = drawerState.unreadCounts.perTag[tag.id] ?: 0) },
-                    selected = backStack.lastOrNull() ==
-                        AppDestination.TagArticles(tag.id, tag.name),
-                    onClick = { navigateTop(AppDestination.TagArticles(tag.id, tag.name)) },
-                )
-            }
-            item(
-                icon = { Text("⚙") },
-                label = { Text("Settings") },
-                selected = backStack.lastOrNull() == AppDestination.Settings,
-                onClick = { navigateTop(AppDestination.Settings) },
+        }
+        entry<AppDestination.FeedArticles> { key ->
+            ArticlesRoute(
+                scope = ArticleScope.ForFeed(key.feedId),
+                title = key.title,
+                onOpenArticle = ::openArticle,
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
             )
-        },
-    ) {
+        }
+        entry<AppDestination.Feeds> {
+            FeedsRoute(
+                onNavigateToArticles = ::openScope,
+                onNavigateToSettings = { navigateTop(AppDestination.Settings) },
+            )
+        }
+        entry<AppDestination.Reader> { key ->
+            ReaderRoute(
+                articleId = key.articleId,
+                onNavigateBack = ::navigateBack,
+            )
+        }
+        entry<AppDestination.Settings> {
+            SettingsRoute(
+                onNavigateBack = ::navigateBack,
+            )
+        }
+    }
+
+    val navContent: @Composable () -> Unit = {
         NavDisplay(
             backStack = backStack,
             onBack = ::navigateBack,
-            entryProvider = entryProvider<NavKey> {
-                entry<AppDestination.ArticlesAll> {
-                    ArticlesRoute(
-                        scope = ArticleScope.All,
-                        title = "All articles",
-                        onOpenArticle = ::openArticle,
-                        onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
-                    )
-                }
-                entry<AppDestination.ArticlesUnread> {
-                    ArticlesRoute(
-                        scope = ArticleScope.Unread,
-                        title = "Unread",
-                        onOpenArticle = ::openArticle,
-                        onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
-                    )
-                }
-                entry<AppDestination.TagArticles> { key ->
-                    ArticlesRoute(
-                        scope = ArticleScope.ForTag(key.tagId),
-                        title = key.title,
-                        onOpenArticle = ::openArticle,
-                        onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
-                    )
-                }
-                entry<AppDestination.FeedArticles> { key ->
-                    ArticlesRoute(
-                        scope = ArticleScope.ForFeed(key.feedId),
-                        title = key.title,
-                        onOpenArticle = ::openArticle,
-                        onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
-                    )
-                }
-                entry<AppDestination.Feeds> {
-                    FeedsRoute(
-                        onNavigateToArticles = ::openScope,
-                        onNavigateToSettings = { navigateTop(AppDestination.Settings) },
-                    )
-                }
-                entry<AppDestination.Reader> { key ->
-                    ReaderRoute(
-                        articleId = key.articleId,
-                        onNavigateBack = ::navigateBack,
-                    )
-                }
-                entry<AppDestination.Settings> {
-                    SettingsRoute(
-                        onNavigateBack = ::navigateBack,
-                    )
-                }
-            },
+            entryProvider = entries,
         )
+    }
+
+    // The reader screen owns a per-article action bar, so the top-level selector is hidden.
+    if (backStack.lastOrNull() is AppDestination.Reader) {
+        navContent()
+    } else {
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                item(
+                    icon = { Text("☰") },
+                    label = { Text("All") },
+                    selected = backStack.lastOrNull() == AppDestination.ArticlesAll,
+                    onClick = { navigateTop(AppDestination.ArticlesAll) },
+                )
+                item(
+                    icon = { Text("★") },
+                    label = { Text("Unread") },
+                    badge = {
+                        val count = drawerState.unreadCounts.global
+                        if (count > 0) UnreadBadge(count = count)
+                    },
+                    selected = backStack.lastOrNull() == AppDestination.ArticlesUnread,
+                    onClick = { navigateTop(AppDestination.ArticlesUnread) },
+                )
+                item(
+                    icon = { Text("⚑") },
+                    label = { Text("Feeds") },
+                    selected = backStack.lastOrNull() == AppDestination.Feeds,
+                    onClick = { navigateTop(AppDestination.Feeds) },
+                )
+                drawerState.tags.forEach { tag ->
+                    item(
+                        icon = { Text("#") },
+                        label = { Text(tag.name) },
+                        badge = { UnreadBadge(count = drawerState.unreadCounts.perTag[tag.id] ?: 0) },
+                        selected = backStack.lastOrNull() == AppDestination.TagArticles(tag.id, tag.name),
+                        onClick = { navigateTop(AppDestination.TagArticles(tag.id, tag.name)) },
+                    )
+                }
+                item(
+                    icon = { Text("⚙") },
+                    label = { Text("Settings") },
+                    selected = backStack.lastOrNull() == AppDestination.Settings,
+                    onClick = { navigateTop(AppDestination.Settings) },
+                )
+            },
+        ) {
+            navContent()
+        }
     }
 }

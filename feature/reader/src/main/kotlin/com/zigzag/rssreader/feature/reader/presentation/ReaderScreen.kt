@@ -5,15 +5,18 @@ import android.net.Uri
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +37,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
+import com.zigzag.rssreader.feature.reader.R
 
 @Composable
 fun ReaderRoute(articleId: String, onNavigateBack: () -> Unit) {
@@ -62,6 +67,27 @@ internal fun ReaderScreen(
     var lastLoaded by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
+    val openOriginal: () -> Unit = {
+        if (!link.isNullOrBlank()) {
+            runCatching {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
+            }
+        }
+    }
+
+    val shareArticle: () -> Unit = {
+        if (!link.isNullOrBlank()) {
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, article?.title.orEmpty())
+                putExtra(Intent.EXTRA_TEXT, link)
+            }
+            runCatching {
+                context.startActivity(Intent.createChooser(sendIntent, null))
+            }
+        }
+    }
+
     val target = when {
         !html.isNullOrBlank() -> "html:$html"
         !link.isNullOrBlank() -> "url:$link"
@@ -88,20 +114,36 @@ internal fun ReaderScreen(
                         modifier = Modifier.semantics { contentDescription = "Back" },
                     ) { Text("←") }
                 },
-                actions = {
-                    if (!link.isNullOrBlank()) {
-                        TextButton(
-                            onClick = {
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(Intent.ACTION_VIEW, Uri.parse(link)),
-                                    )
-                                }
-                            },
-                        ) { Text("Open original") }
-                    }
-                },
             )
+        },
+        bottomBar = {
+            BottomAppBar {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    IconButton(
+                        onClick = openOriginal,
+                        enabled = !link.isNullOrBlank(),
+                        modifier = Modifier.semantics { contentDescription = "View original article" },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.feature_reader_ic_open_original),
+                            contentDescription = null,
+                        )
+                    }
+                    IconButton(
+                        onClick = shareArticle,
+                        enabled = !link.isNullOrBlank(),
+                        modifier = Modifier.semantics { contentDescription = "Share article" },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.feature_reader_ic_share),
+                            contentDescription = null,
+                        )
+                    }
+                }
+            }
         },
     ) { padding ->
         Box(
