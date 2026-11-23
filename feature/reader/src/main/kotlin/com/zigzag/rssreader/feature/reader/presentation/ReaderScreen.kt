@@ -9,17 +9,27 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,15 +40,21 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
+import com.zigzag.rssreader.core.ui.components.ArticleFavicon
+import com.zigzag.rssreader.core.ui.components.faviconCandidates
+import com.zigzag.rssreader.core.ui.components.formatArticleDate
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
 import com.zigzag.rssreader.feature.reader.R
 import kotlin.math.abs
@@ -120,26 +136,66 @@ internal fun ReaderScreen(
         if (article != null && target == null) isLoading = false
     }
 
+    val dateLabel = article?.publishedAt?.let(::formatArticleDate).orEmpty()
+    val faviconBaseUrl = article?.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article?.link
+    val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
+
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = article?.title ?: "Article",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        ArticleFavicon(
+                            primaryUrl = faviconUrls?.first,
+                            fallbackUrl = faviconUrls?.second,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(RoundedCornerShape(5.dp)),
+                        )
+                        if (faviconUrls != null) {
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = article?.title.orEmpty().ifBlank { "Article" },
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (article != null) {
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = listOfNotNull(
+                                        article.feedTitle.takeIf { it.isNotBlank() },
+                                        dateLabel.takeIf { it.isNotBlank() },
+                                    ).joinToString(" · "),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
                         modifier = Modifier.semantics { contentDescription = "Back" },
-                    ) { Text("←") }
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
             )
         },
         bottomBar = {
-            BottomAppBar {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -223,6 +279,7 @@ internal fun ReaderScreen(
                                 },
                             )
                             WebView(webContext).apply {
+                                setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 settings.javaScriptEnabled = false
                                 settings.domStorageEnabled = false
                                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW

@@ -10,9 +10,10 @@ class ArticleHtmlTest {
     fun constrainsImagesToTheWebViewWidth() {
         val prepared = prepareArticleHtml("""<img src="wide.png" width="1800" height="900">""")
 
-        assertTrue(prepared.contains("img { max-width: 100% !important; height: auto !important; }"))
+        assertTrue(prepared.contains("img { max-width: 100% !important; height: auto !important; border-radius: 6px; }"))
         assertTrue(prepared.contains("name=\"viewport\""))
-        assertTrue(prepared.contains("padding: 0 16px;"))
+        assertTrue(prepared.contains("background: #FBF7EB;"))
+        assertTrue(prepared.contains("font-family: Georgia"))
         assertTrue(prepared.contains("""<img src="wide.png" width="1800" height="900">"""))
     }
 

@@ -13,12 +13,28 @@ internal fun prepareArticleHtml(content: String): String {
         <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-          html, body { margin: 0; padding: 0; }
-          body { line-height: 1.5; overflow-wrap: break-word; padding: 0 16px; }
-          img { max-width: 100% !important; height: auto !important; }
+          html { background: #FBF7EB; }
+          body {
+            margin: 0; padding: 20px 22px 32px;
+            max-width: 680px; margin: 0 auto;
+            background: #FBF7EB;
+            color: #2A2620;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 17px;
+            line-height: 1.65;
+            overflow-wrap: break-word;
+          }
+          h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; line-height: 1.25; }
+          a { color: #4655A4; }
+          blockquote {
+            margin: 18px 0; padding: 4px 0 4px 16px;
+            border-left: 3px solid #4655A4;
+            color: #5A5348; font-style: italic;
+          }
+          img { max-width: 100% !important; height: auto !important; border-radius: 6px; }
           video, iframe { max-width: 100%; }
           table { max-width: 100%; }
-          pre { white-space: pre-wrap; overflow-x: auto; }
+          pre { white-space: pre-wrap; overflow-x: auto; font-family: monospace; }
         </style>
         </head>
         <body>$body</body>

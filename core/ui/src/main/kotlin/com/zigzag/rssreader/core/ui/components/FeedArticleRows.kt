@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import com.zigzag.rssreader.core.domain.model.Article
@@ -111,7 +112,7 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
         MaterialTheme.typography.bodyLarge
     } else {
         MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-    }
+    }.copy(lineHeight = 20.sp)
     val dateLabel = article.publishedAt?.let(::formatArticleDateTime).orEmpty()
     val faviconBaseUrl = article.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article.link
     val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
@@ -171,33 +172,36 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
  * DuckDuckGo's icon service, which covers sites that do not serve a root favicon.
  * Null when the site's host cannot be determined.
  */
-private fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
+fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
     val primary = faviconUrl(baseUrl) ?: return null
     val fallback = iconServiceUrl(baseUrl) ?: return primary to primary
     return primary to fallback
 }
 
 @Composable
-private fun ArticleFavicon(
-    primaryUrl: String,
-    fallbackUrl: String,
+fun ArticleFavicon(
+    primaryUrl: String?,
+    fallbackUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    var url by remember(primaryUrl) { mutableStateOf(primaryUrl) }
-    var usedFallback by remember(primaryUrl) { mutableStateOf(false) }
+    val start = primaryUrl ?: return
+    var url by remember(start) { mutableStateOf(start) }
+    var usedFallback by remember(start) { mutableStateOf(false) }
     AsyncImage(
         model = url,
         contentDescription = null,
         modifier = modifier,
         contentScale = ContentScale.Crop,
         onState = { state ->
-            if (state is AsyncImagePainter.State.Error && !usedFallback && fallbackUrl != primaryUrl) {
+            if (state is AsyncImagePainter.State.Error && !usedFallback && fallbackUrl != null && fallbackUrl != start) {
                 usedFallback = true
                 url = fallbackUrl
             }
         },
     )
 }
+
+fun formatArticleDate(instant: kotlinx.datetime.Instant): String = formatArticleDateTime(instant)
 
 private fun faviconUrl(baseUrl: String?): String? {
     val trimmed = baseUrl?.trim().orEmpty()
