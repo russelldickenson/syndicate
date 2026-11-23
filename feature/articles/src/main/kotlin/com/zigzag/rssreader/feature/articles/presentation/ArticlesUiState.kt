@@ -10,6 +10,7 @@ data class ArticlesUiState(
     val scopeTitle: String = "All articles",
     val sort: ArticleSort = ArticleSort.NEWEST,
     val unreadOnly: Boolean = false,
+    val showConfirmMarkAllRead: Boolean = false,
     val isLoading: Boolean = true,
     val error: String? = null,
 )

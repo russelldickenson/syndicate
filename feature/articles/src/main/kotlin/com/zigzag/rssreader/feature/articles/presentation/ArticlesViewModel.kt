@@ -36,6 +36,7 @@ class ArticlesViewModel @Inject constructor(
     private val loading = MutableStateFlow(true)
     private val errorMessage = MutableStateFlow<String?>(null)
     private val scopeTitle = MutableStateFlow("All articles")
+    private val confirmMarkAllRead = MutableStateFlow(false)
 
     private val query =
         combine(scope, unreadOnly, sort) { currentScope, onlyUnread, currentSort ->
@@ -55,13 +56,15 @@ class ArticlesViewModel @Inject constructor(
             query,
             combine(loading, errorMessage) { isLoading, error -> ArticleStatus(isLoading, error) },
             scopeTitle,
-        ) { list, currentQuery, status, title ->
+            confirmMarkAllRead,
+        ) { list, currentQuery, status, title, showConfirm ->
             ArticlesUiState(
                 articles = list,
                 scope = currentQuery.scope,
                 scopeTitle = title,
                 sort = currentQuery.sort,
                 unreadOnly = currentQuery.unreadOnly,
+                showConfirmMarkAllRead = showConfirm,
                 isLoading = status.isLoading,
                 error = status.error,
             )
@@ -125,6 +128,19 @@ class ArticlesViewModel @Inject constructor(
             runCatching { articleRepository.markAllRead(scope.value) }
                 .onFailure { errorMessage.value = "Couldn't mark all as read: ${it.message.orUnknown()}" }
         }
+    }
+
+    fun showMarkAllReadConfirmation() {
+        confirmMarkAllRead.value = true
+    }
+
+    fun dismissMarkAllReadConfirmation() {
+        confirmMarkAllRead.value = false
+    }
+
+    fun confirmMarkAllRead() {
+        confirmMarkAllRead.value = false
+        markAllRead()
     }
 
     fun markRead(articleId: String) {
