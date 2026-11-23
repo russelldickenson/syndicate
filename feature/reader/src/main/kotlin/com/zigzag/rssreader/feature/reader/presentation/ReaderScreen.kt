@@ -2,6 +2,8 @@ package com.zigzag.rssreader.feature.reader.presentation
 
 import android.content.Intent
 import android.net.Uri
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -24,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,20 +41,31 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
 import com.zigzag.rssreader.feature.reader.R
+import kotlin.math.abs
 
 @Composable
-fun ReaderRoute(articleId: String, onNavigateBack: () -> Unit) {
+fun ReaderRoute(
+    articleIds: List<String>,
+    initialIndex: Int,
+    onNavigateBack: () -> Unit,
+) {
     val viewModel: ReaderViewModel = hiltViewModel()
-    LaunchedEffect(articleId) { viewModel.load(articleId) }
+    LaunchedEffect(articleIds, initialIndex) { viewModel.initialize(articleIds, initialIndex) }
 
     val article by viewModel.article.collectAsStateWithLifecycle()
     val html by viewModel.html.collectAsStateWithLifecycle()
     val link by viewModel.link.collectAsStateWithLifecycle()
+    val hasPrevious by viewModel.hasPrevious.collectAsStateWithLifecycle()
+    val hasNext by viewModel.hasNext.collectAsStateWithLifecycle()
 
     ReaderScreen(
         article = article,
         html = html,
         link = link,
+        canGoPrevious = hasPrevious,
+        canGoNext = hasNext,
+        onPrevious = viewModel::previous,
+        onNext = viewModel::next,
         onNavigateBack = onNavigateBack,
     )
 }
@@ -61,11 +75,19 @@ internal fun ReaderScreen(
     article: Article?,
     html: String?,
     link: String?,
+    canGoPrevious: Boolean,
+    canGoNext: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     var isLoading by remember { mutableStateOf(true) }
     var lastLoaded by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+
+    // Keep the touch listener stable while always calling the current callbacks.
+    val previousAction = rememberUpdatedState(onPrevious)
+    val nextAction = rememberUpdatedState(onNext)
 
     val openOriginal: () -> Unit = {
         if (!link.isNullOrBlank()) {
@@ -123,6 +145,26 @@ internal fun ReaderScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     IconButton(
+                        onClick = onPrevious,
+                        enabled = canGoPrevious,
+                        modifier = Modifier.semantics { contentDescription = "Previous article" },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.feature_reader_ic_previous),
+                            contentDescription = null,
+                        )
+                    }
+                    IconButton(
+                        onClick = onNext,
+                        enabled = canGoNext,
+                        modifier = Modifier.semantics { contentDescription = "Next article" },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.feature_reader_ic_next),
+                            contentDescription = null,
+                        )
+                    }
+                    IconButton(
                         onClick = openOriginal,
                         enabled = !link.isNullOrBlank(),
                         modifier = Modifier.semantics { contentDescription = "View original article" },
@@ -160,12 +202,33 @@ internal fun ReaderScreen(
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { webContext ->
+                            val swipeDetector = GestureDetector(
+                                webContext,
+                                object : GestureDetector.SimpleOnGestureListener() {
+                                    override fun onFling(
+                                        start: MotionEvent?,
+                                        end: MotionEvent,
+                                        velocityX: Float,
+                                        velocityY: Float,
+                                    ): Boolean {
+                                        if (start == null) return false
+                                        val dx = end.x - start.x
+                                        val dy = end.y - start.y
+                                        if (abs(dx) > abs(dy) && abs(dx) > 80 && abs(velocityX) > 150) {
+                                            if (dx > 0) previousAction.value() else nextAction.value()
+                                            return true
+                                        }
+                                        return false
+                                    }
+                                },
+                            )
                             WebView(webContext).apply {
                                 settings.javaScriptEnabled = false
                                 settings.domStorageEnabled = false
                                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                                 settings.useWideViewPort = false
                                 settings.loadWithOverviewMode = true
+                                setOnTouchListener { _, event -> swipeDetector.onTouchEvent(event) }
                                 webViewClient = object : WebViewClient() {
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         isLoading = false
