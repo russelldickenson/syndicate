@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
 import com.zigzag.rssreader.core.domain.repository.ArticleRepository
 import com.zigzag.rssreader.core.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val articleRepository: ArticleRepository,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     val articleFont: StateFlow<ArticleFont> =
@@ -32,6 +33,27 @@ class ReaderViewModel @Inject constructor(
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
                 initialValue = ArticleFont.SANS_SERIF,
             )
+
+    val articleFontSize: StateFlow<ArticleFontSize> =
+        settingsRepository.observeSettings()
+            .map { it.articleFontSize }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                initialValue = ArticleFontSize.MEDIUM,
+            )
+
+    fun setArticleFont(font: ArticleFont) {
+        viewModelScope.launch {
+            runCatching { settingsRepository.updateSettings { it.copy(articleFont = font) } }
+        }
+    }
+
+    fun setArticleFontSize(size: ArticleFontSize) {
+        viewModelScope.launch {
+            runCatching { settingsRepository.updateSettings { it.copy(articleFontSize = size) } }
+        }
+    }
 
     private val articleIds = MutableStateFlow<List<String>>(emptyList())
     private val _index = MutableStateFlow(0)

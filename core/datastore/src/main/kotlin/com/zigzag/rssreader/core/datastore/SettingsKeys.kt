@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 object SettingsKeys {
     val THEME_MODE = intPreferencesKey("theme_mode")
     val ARTICLE_FONT = stringPreferencesKey("article_font")
+    val ARTICLE_FONT_SIZE = stringPreferencesKey("article_font_size")
     val REFRESH_ON_STARTUP = booleanPreferencesKey("refresh_on_startup")
     val ARTICLE_SORT = stringPreferencesKey("article_sort")
     val FEED_SORT = stringPreferencesKey("feed_sort")

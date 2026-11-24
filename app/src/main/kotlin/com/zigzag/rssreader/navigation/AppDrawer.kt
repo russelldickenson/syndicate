@@ -128,18 +128,17 @@ fun AppDrawer(
                 }
             }
 
+            item(key = "settings_divider") {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
             item(key = "manage_feeds") {
                 DrawerRow(
                     label = "Manage feeds",
                     icon = Icons.Filled.Flag,
                     selected = currentDestination == AppDestination.Feeds,
                     onClick = { onNavigate(AppDestination.Feeds) },
-                )
-            }
-
-            item(key = "settings_divider") {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
             item(key = "settings") {

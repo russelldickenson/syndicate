@@ -1,6 +1,7 @@
 package com.zigzag.rssreader.feature.reader.presentation
 
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -29,6 +30,13 @@ class ArticleHtmlTest {
         assertTrue(prepared.contains("h1 { font-size: 1.75em; }"))
         assertTrue(prepared.contains("h2 { font-size: 1.4em; }"))
         assertTrue(prepared.contains("h3 { font-size: 1.15em; }"))
+    }
+
+    @Test
+    fun usesSelectedFontSize() {
+        assertTrue(prepareArticleHtml("x").contains("font-size: 16px;"))
+        assertTrue(prepareArticleHtml("x", fontSize = ArticleFontSize.SMALL).contains("font-size: 14px;"))
+        assertTrue(prepareArticleHtml("x", fontSize = ArticleFontSize.LARGE).contains("font-size: 20px;"))
     }
 
     @Test

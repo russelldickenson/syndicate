@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.FolderSort
@@ -50,6 +51,7 @@ class SettingsRepositoryImpl @Inject constructor(
         dataStore.edit { preferences ->
             preferences[SettingsKeys.THEME_MODE] = updated.themeMode.ordinal
             preferences[SettingsKeys.ARTICLE_FONT] = updated.articleFont.name
+            preferences[SettingsKeys.ARTICLE_FONT_SIZE] = updated.articleFontSize.name
             preferences[SettingsKeys.REFRESH_ON_STARTUP] = updated.refreshOnStartup
             preferences[SettingsKeys.ARTICLE_SORT] = updated.articleSort.name
             preferences[SettingsKeys.FEED_SORT] = updated.feedSort.name
@@ -76,6 +78,10 @@ class SettingsRepositoryImpl @Inject constructor(
             ?.let { name -> FeedSort.entries.firstOrNull { it.name == name } }
             ?: defaults.feedSort
 
+        val articleFontSize = this[SettingsKeys.ARTICLE_FONT_SIZE]
+            ?.let { name -> ArticleFontSize.entries.firstOrNull { it.name == name } }
+            ?: defaults.articleFontSize
+
         val folderSort = this[SettingsKeys.FOLDER_SORT]
             ?.let { name -> FolderSort.entries.firstOrNull { it.name == name } }
             ?: defaults.folderSort
@@ -83,6 +89,7 @@ class SettingsRepositoryImpl @Inject constructor(
         return UserSettings(
             themeMode = themeMode,
             articleFont = articleFont,
+            articleFontSize = articleFontSize,
             refreshOnStartup = this[SettingsKeys.REFRESH_ON_STARTUP] ?: defaults.refreshOnStartup,
             articleSort = articleSort,
             feedSort = feedSort,

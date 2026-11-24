@@ -1,6 +1,7 @@
 package com.zigzag.rssreader.feature.reader.presentation
 
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
 
 /**
  * Wraps feed-provided article HTML in a document that constrains media to the
@@ -15,6 +16,7 @@ internal fun prepareArticleHtml(
     content: String,
     dark: Boolean = false,
     font: ArticleFont = ArticleFont.SANS_SERIF,
+    fontSize: ArticleFontSize = ArticleFontSize.MEDIUM,
     embeddedFont: String? = null,
 ): String {
     val body = content.replace(DOCUMENT_TAGS, "")
@@ -36,6 +38,11 @@ internal fun prepareArticleHtml(
         ArticleFont.INTER, ArticleFont.ATKINSON_SANS -> "'ArticleFont', sans-serif"
         ArticleFont.ATKINSON_SERIF -> "'ArticleFont', serif"
     }
+    val fontSizePx = when (fontSize) {
+        ArticleFontSize.SMALL -> 14
+        ArticleFontSize.MEDIUM -> 16
+        ArticleFontSize.LARGE -> 20
+    }
     return """
         <!DOCTYPE html>
         <html>
@@ -48,7 +55,7 @@ internal fun prepareArticleHtml(
             padding: 0 0 24px;
             color: $textColor;
             font-family: $fontFamily;
-            font-size: 16px;
+            font-size: ${fontSizePx}px;
             line-height: 1.6;
             overflow-wrap: break-word;
           }

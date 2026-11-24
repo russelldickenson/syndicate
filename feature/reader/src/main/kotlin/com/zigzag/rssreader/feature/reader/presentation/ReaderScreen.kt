@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,13 +19,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,9 +49,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import android.util.Base64
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,7 +57,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
+import com.zigzag.rssreader.core.ui.components.ArticleFontPreview
+import com.zigzag.rssreader.core.ui.components.ArticleFontSizeSelector
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
+import com.zigzag.rssreader.core.ui.components.SectionHeader
+import com.zigzag.rssreader.core.ui.components.articleFontFamily
 import com.zigzag.rssreader.core.ui.components.formatArticleDate
 import com.zigzag.rssreader.feature.reader.R
 import kotlin.math.abs
@@ -74,17 +82,21 @@ fun ReaderRoute(
     val hasPrevious by viewModel.hasPrevious.collectAsStateWithLifecycle()
     val hasNext by viewModel.hasNext.collectAsStateWithLifecycle()
     val articleFont by viewModel.articleFont.collectAsStateWithLifecycle()
+    val articleFontSize by viewModel.articleFontSize.collectAsStateWithLifecycle()
 
     ReaderScreen(
         article = article,
         html = html,
         link = link,
         articleFont = articleFont,
+        articleFontSize = articleFontSize,
         canGoPrevious = hasPrevious,
         canGoNext = hasNext,
         onPrevious = viewModel::previous,
         onNext = viewModel::next,
         onNavigateBack = onNavigateBack,
+        onSetFont = viewModel::setArticleFont,
+        onSetFontSize = viewModel::setArticleFontSize,
     )
 }
 
@@ -94,13 +106,17 @@ internal fun ReaderScreen(
     html: String?,
     link: String?,
     articleFont: ArticleFont,
+    articleFontSize: ArticleFontSize,
     canGoPrevious: Boolean,
     canGoNext: Boolean,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onNavigateBack: () -> Unit,
+    onSetFont: (ArticleFont) -> Unit,
+    onSetFontSize: (ArticleFontSize) -> Unit,
 ) {
     var isLoading by remember { mutableStateOf(true) }
+    var showAppearanceSheet by remember { mutableStateOf(false) }
     var lastLoaded by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
@@ -141,8 +157,9 @@ internal fun ReaderScreen(
     // Custom fonts are inlined into the HTML as a Base64 data URI so the WebView
     // can render them even though the article is loaded from a feed URL.
     val fontRes = when (articleFont) {
-        ArticleFont.INTER -> R.raw.font_inter
-        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF -> R.raw.font_atkinson
+        ArticleFont.INTER -> com.zigzag.rssreader.core.ui.R.raw.font_inter
+        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF ->
+            com.zigzag.rssreader.core.ui.R.raw.font_atkinson
         else -> null
     }
     val embeddedFont = remember(fontRes) {
@@ -153,13 +170,7 @@ internal fun ReaderScreen(
             )
         }
     }
-    val atkinson = FontFamily(Font(R.raw.font_atkinson, FontWeight.Normal, FontStyle.Normal))
-    val titleFontFamily = when (articleFont) {
-        ArticleFont.SERIF -> FontFamily.Serif
-        ArticleFont.INTER -> FontFamily(Font(R.raw.font_inter, FontWeight.Normal, FontStyle.Normal))
-        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF -> atkinson
-        ArticleFont.SANS_SERIF -> FontFamily.SansSerif
-    }
+    val titleFontFamily = articleFontFamily(articleFont)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -210,14 +221,26 @@ internal fun ReaderScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    // IconButton centers its 24dp icon inside a 48dp touch target;
-                    // offset it so the arrow lines up with the title and body text.
-                    .offset(x = (-12).dp)
-                    .semantics { contentDescription = "Back" },
-            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier
+                        // IconButton centers its 24dp icon inside a 48dp touch target;
+                        // offset it so the arrow lines up with the title and body text.
+                        .offset(x = (-12).dp)
+                        .semantics { contentDescription = "Back" },
+                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
+                IconButton(
+                    onClick = { showAppearanceSheet = true },
+                    modifier = Modifier
+                        .offset(x = 12.dp)
+                        .semantics { contentDescription = "Reading font and size" },
+                ) { Icon(Icons.Filled.FormatSize, contentDescription = null) }
+            }
 
             if (article != null) {
                 Text(
@@ -288,7 +311,7 @@ internal fun ReaderScreen(
                             }
                         },
                         update = { webView ->
-                            val loadKey = "$target|$articleFont|$dark"
+                            val loadKey = "$target|$articleFont|$articleFontSize|$dark"
                             if (lastLoaded != loadKey) {
                                 isLoading = true
                                 if (!html.isNullOrBlank()) {
@@ -298,6 +321,7 @@ internal fun ReaderScreen(
                                             html.orEmpty(),
                                             dark = dark,
                                             font = articleFont,
+                                            fontSize = articleFontSize,
                                             embeddedFont = embeddedFont,
                                         ),
                                         "text/html",
@@ -315,6 +339,53 @@ internal fun ReaderScreen(
             } else if (article == null) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
+        }
+    }
+
+    if (showAppearanceSheet) {
+        ReadingAppearanceSheet(
+            font = articleFont,
+            fontSize = articleFontSize,
+            onFontChange = onSetFont,
+            onFontSizeChange = onSetFontSize,
+            onDismiss = { showAppearanceSheet = false },
+        )
+    }
+}
+
+@Composable
+private fun ReadingAppearanceSheet(
+    font: ArticleFont,
+    fontSize: ArticleFontSize,
+    onFontChange: (ArticleFont) -> Unit,
+    onFontSizeChange: (ArticleFontSize) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            Text(
+                text = "Reading appearance",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            SectionHeader("Font")
+            ArticleFont.entries.forEach { option ->
+                ListItem(
+                    headlineContent = { Text(option.label) },
+                    leadingContent = {
+                        RadioButton(
+                            selected = font == option,
+                            onClick = { onFontChange(option) },
+                        )
+                    },
+                    modifier = Modifier.clickable { onFontChange(option) },
+                )
+            }
+            SectionHeader("Text size")
+            ArticleFontSizeSelector(selected = fontSize, onSelect = onFontSizeChange)
+            ArticleFontPreview(font = font, size = fontSize)
         }
     }
 }

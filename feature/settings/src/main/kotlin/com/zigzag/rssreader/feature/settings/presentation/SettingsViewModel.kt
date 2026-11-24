@@ -3,6 +3,7 @@ package com.zigzag.rssreader.feature.settings.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.ArticleFont
+import com.zigzag.rssreader.core.domain.model.ArticleFontSize
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.FolderSort
@@ -30,6 +31,10 @@ class SettingsViewModel @Inject constructor(
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
                 initialValue = UserSettings(),
             )
+
+    fun setArticleFontSize(size: ArticleFontSize) {
+        update { it.copy(articleFontSize = size) }
+    }
 
     fun setThemeMode(themeMode: ThemeMode) {
         update { it.copy(themeMode = themeMode) }

@@ -101,9 +101,16 @@ enum class ArticleFont(val label: String) {
     ATKINSON_SERIF("Atkinson Hyperlegible Next (Serif)")
 }
 
+enum class ArticleFontSize(val label: String) {
+    SMALL("Small"),
+    MEDIUM("Medium"),
+    LARGE("Large"),
+}
+
 data class UserSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val articleFont: ArticleFont = ArticleFont.SANS_SERIF,
+    val articleFontSize: ArticleFontSize = ArticleFontSize.MEDIUM,
     val refreshOnStartup: Boolean = true,
     val articleSort: ArticleSort = ArticleSort.NEWEST,
     val feedSort: FeedSort = FeedSort.NAME,

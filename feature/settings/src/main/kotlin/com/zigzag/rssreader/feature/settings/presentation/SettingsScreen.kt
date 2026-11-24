@@ -34,6 +34,8 @@ import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.ThemeMode
 import com.zigzag.rssreader.core.domain.model.UserSettings
+import com.zigzag.rssreader.core.ui.components.ArticleFontPreview
+import com.zigzag.rssreader.core.ui.components.ArticleFontSizeSelector
 import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.SortSheet
 
@@ -106,6 +108,19 @@ internal fun SettingsScreen(
                     label = "Font",
                     value = settings.articleFont.label,
                     onClick = { showFontSheet = true },
+                )
+            }
+            item(key = "article_font_size") { SectionHeader("Text size") }
+            item(key = "article_font_size_selector") {
+                ArticleFontSizeSelector(
+                    selected = settings.articleFontSize,
+                    onSelect = viewModel::setArticleFontSize,
+                )
+            }
+            item(key = "article_font_preview") {
+                ArticleFontPreview(
+                    font = settings.articleFont,
+                    size = settings.articleFontSize,
                 )
             }
 
