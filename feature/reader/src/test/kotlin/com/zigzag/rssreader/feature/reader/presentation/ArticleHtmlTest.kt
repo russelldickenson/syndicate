@@ -24,6 +24,14 @@ class ArticleHtmlTest {
     }
 
     @Test
+    fun usesSmallerHeadingSizes() {
+        val prepared = prepareArticleHtml("x")
+        assertTrue(prepared.contains("h1 { font-size: 1.75em; }"))
+        assertTrue(prepared.contains("h2 { font-size: 1.4em; }"))
+        assertTrue(prepared.contains("h3 { font-size: 1.15em; }"))
+    }
+
+    @Test
     fun usesSystemFontFamilies() {
         assertTrue(prepareArticleHtml("x", font = ArticleFont.SANS_SERIF).contains("font-family: sans-serif;"))
         assertTrue(prepareArticleHtml("x", font = ArticleFont.SERIF).contains("font-family: serif;"))

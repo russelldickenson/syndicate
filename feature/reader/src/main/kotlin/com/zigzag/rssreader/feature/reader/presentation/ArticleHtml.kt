@@ -53,6 +53,9 @@ internal fun prepareArticleHtml(
             overflow-wrap: break-word;
           }
           a { color: $linkColor; }
+          h1 { font-size: 1.75em; }
+          h2 { font-size: 1.4em; }
+          h3 { font-size: 1.15em; }
           img { max-width: 100% !important; height: auto !important; }
           video, iframe { max-width: 100%; }
           table { max-width: 100%; }
