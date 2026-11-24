@@ -162,9 +162,11 @@ fun AppNavigation() {
             )
         }
         entry<AppDestination.FeedArticles> { key ->
+            val feed = appDrawerState.feeds.firstOrNull { it.id == key.feedId }
             ArticlesRoute(
                 scope = ArticleScope.ForFeed(key.feedId),
                 title = key.title,
+                faviconBaseUrl = feed?.siteUrl?.takeIf { it.isNotBlank() } ?: feed?.url,
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
                 onOpenDrawer = openDrawer,

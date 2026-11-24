@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -24,6 +26,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,15 +37,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.ArticleScope
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.ui.components.ArticleRow
+import com.zigzag.rssreader.core.ui.components.FaviconImage
+import com.zigzag.rssreader.core.ui.components.faviconCandidates
 import com.zigzag.rssreader.core.ui.components.EmptyState
 import com.zigzag.rssreader.core.ui.components.ErrorMessage
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
@@ -56,6 +65,7 @@ fun ArticlesRoute(
     onNavigateToFeeds: () -> Unit,
     onOpenDrawer: () -> Unit,
     title: String? = null,
+    faviconBaseUrl: String? = null,
 ) {
     val viewModel: ArticlesViewModel = hiltViewModel()
     LaunchedEffect(scope) { viewModel.setScope(scope) }
@@ -65,6 +75,7 @@ fun ArticlesRoute(
         state = state,
         viewModel = viewModel,
         routeTitle = title,
+        faviconBaseUrl = faviconBaseUrl,
         onOpenArticles = onOpenArticles,
         onNavigateToFeeds = onNavigateToFeeds,
         onOpenDrawer = onOpenDrawer,
@@ -76,17 +87,19 @@ internal fun ArticlesScreen(
     state: ArticlesUiState,
     viewModel: ArticlesViewModel,
     routeTitle: String?,
+    faviconBaseUrl: String?,
     onOpenArticles: (List<String>, Int) -> Unit,
     onNavigateToFeeds: () -> Unit,
     onOpenDrawer: () -> Unit,
 ) {
     var showSortSheet by remember { mutableStateOf(false) }
     val displayTitle = routeTitle ?: state.scopeTitle
+    val faviconUrls = remember(faviconBaseUrl) { faviconBaseUrl?.let(::faviconCandidates) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(displayTitle) },
+                title = {},
                 navigationIcon = {
                     IconButton(
                         onClick = onOpenDrawer,
@@ -148,6 +161,32 @@ internal fun ArticlesScreen(
                 .padding(padding)
                 .fillMaxSize(),
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (faviconUrls != null) {
+                    FaviconImage(
+                        primaryUrl = faviconUrls.first,
+                        fallbackUrl = faviconUrls.second,
+                        fallback = {},
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(7.dp)),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
             state.error?.let { ErrorMessage(message = it, onRetry = viewModel::clearError) }
 
             if (state.isLoading && state.articles.isEmpty()) {
