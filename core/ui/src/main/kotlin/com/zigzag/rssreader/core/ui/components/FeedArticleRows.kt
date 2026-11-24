@@ -38,6 +38,8 @@ import java.net.URI
 
 @Composable
 fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditTags: () -> Unit) {
+    val faviconBase = feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url
+    val faviconUrls = remember(faviconBase) { faviconCandidates(faviconBase) }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -49,6 +51,17 @@ fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditTags: () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (faviconUrls != null) {
+                FaviconImage(
+                    primaryUrl = faviconUrls.first,
+                    fallbackUrl = faviconUrls.second,
+                    fallback = {},
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                Spacer(Modifier.width(12.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = feed.title,
