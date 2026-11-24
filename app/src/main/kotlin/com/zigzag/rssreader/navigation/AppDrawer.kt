@@ -10,7 +10,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Surface
@@ -19,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +73,7 @@ fun AppDrawer(
             item(key = "all") {
                 DrawerRow(
                     label = "All",
-                    glyph = "☰",
+                    icon = Icons.Filled.Menu,
                     selected = currentDestination == AppDestination.ArticlesAll,
                     onClick = { onNavigate(AppDestination.ArticlesAll) },
                 )
@@ -72,7 +81,7 @@ fun AppDrawer(
             item(key = "unread") {
                 DrawerRow(
                     label = "Unread",
-                    glyph = "★",
+                    icon = Icons.Filled.Star,
                     badge = state.unreadCounts.global,
                     selected = currentDestination == AppDestination.ArticlesUnread,
                     onClick = { onNavigate(AppDestination.ArticlesUnread) },
@@ -81,7 +90,7 @@ fun AppDrawer(
             items(items = state.feeds, key = { "feed_${it.id}" }) { feed ->
                 DrawerRow(
                     label = feed.title,
-                    glyph = "•",
+                    icon = Icons.Filled.Article,
                     badge = state.unreadCounts.perFeed[feed.id] ?: 0,
                     selected = (currentDestination as? AppDestination.FeedArticles)?.feedId == feed.id,
                     onClick = { onNavigate(AppDestination.FeedArticles(feed.id, feed.title)) },
@@ -90,7 +99,7 @@ fun AppDrawer(
             item(key = "manage_feeds") {
                 DrawerRow(
                     label = "Manage feeds",
-                    glyph = "⚑",
+                    icon = Icons.Filled.Flag,
                     selected = currentDestination == AppDestination.Feeds,
                     onClick = { onNavigate(AppDestination.Feeds) },
                 )
@@ -103,7 +112,7 @@ fun AppDrawer(
                 items(items = state.tags, key = { "tag_${it.id}" }) { tag ->
                     DrawerRow(
                         label = tag.name,
-                        glyph = "#",
+                        icon = Icons.Filled.Tag,
                         badge = state.unreadCounts.perTag[tag.id] ?: 0,
                         selected = (currentDestination as? AppDestination.TagArticles)?.tagId == tag.id,
                         onClick = { onNavigate(AppDestination.TagArticles(tag.id, tag.name)) },
@@ -119,7 +128,7 @@ fun AppDrawer(
             item(key = "settings") {
                 DrawerRow(
                     label = "Settings",
-                    glyph = "⚙",
+                    icon = Icons.Filled.Settings,
                     selected = currentDestination == AppDestination.Settings,
                     onClick = { onNavigate(AppDestination.Settings) },
                 )
@@ -134,7 +143,7 @@ fun AppDrawer(
 @Composable
 private fun DrawerRow(
     label: String,
-    glyph: String,
+    icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
     badge: Int = 0,
@@ -155,12 +164,13 @@ private fun DrawerRow(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = glyph,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
                 modifier = Modifier.width(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(Modifier.width(12.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
