@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
@@ -34,7 +35,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -209,7 +212,11 @@ internal fun ReaderScreen(
         ) {
             IconButton(
                 onClick = onNavigateBack,
-                modifier = Modifier.semantics { contentDescription = "Back" },
+                modifier = Modifier
+                    // IconButton centers its 24dp icon inside a 48dp touch target;
+                    // offset it so the arrow lines up with the title and body text.
+                    .offset(x = (-12).dp)
+                    .semantics { contentDescription = "Back" },
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
 
             if (article != null) {
