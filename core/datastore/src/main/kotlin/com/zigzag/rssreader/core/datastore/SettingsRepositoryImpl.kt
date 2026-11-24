@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.ThemeMode
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.domain.repository.SettingsRepository
@@ -53,7 +53,7 @@ class SettingsRepositoryImpl @Inject constructor(
             preferences[SettingsKeys.REFRESH_ON_STARTUP] = updated.refreshOnStartup
             preferences[SettingsKeys.ARTICLE_SORT] = updated.articleSort.name
             preferences[SettingsKeys.FEED_SORT] = updated.feedSort.name
-            preferences[SettingsKeys.TAG_SORT] = updated.tagSort.name
+            preferences[SettingsKeys.FOLDER_SORT] = updated.folderSort.name
         }
     }
 
@@ -76,9 +76,9 @@ class SettingsRepositoryImpl @Inject constructor(
             ?.let { name -> FeedSort.entries.firstOrNull { it.name == name } }
             ?: defaults.feedSort
 
-        val tagSort = this[SettingsKeys.TAG_SORT]
-            ?.let { name -> TagSort.entries.firstOrNull { it.name == name } }
-            ?: defaults.tagSort
+        val folderSort = this[SettingsKeys.FOLDER_SORT]
+            ?.let { name -> FolderSort.entries.firstOrNull { it.name == name } }
+            ?: defaults.folderSort
 
         return UserSettings(
             themeMode = themeMode,
@@ -86,7 +86,7 @@ class SettingsRepositoryImpl @Inject constructor(
             refreshOnStartup = this[SettingsKeys.REFRESH_ON_STARTUP] ?: defaults.refreshOnStartup,
             articleSort = articleSort,
             feedSort = feedSort,
-            tagSort = tagSort,
+            folderSort = folderSort,
         )
     }
 }

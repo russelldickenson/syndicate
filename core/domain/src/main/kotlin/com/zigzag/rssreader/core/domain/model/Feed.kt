@@ -17,11 +17,11 @@ data class Feed(
     val description: String? = null,
     val lastRefreshAt: Instant? = null,
     val lastError: String? = null,
-    val tags: List<Tag> = emptyList(),
+    val folderId: String? = null,
     val unreadCount: Int = 0,
 )
 
-data class Tag(
+data class Folder(
     val id: String,
     val name: String,
     val sortOrder: Int = 0,
@@ -46,7 +46,7 @@ data class Article(
 data class UnreadCounts(
     val global: Int = 0,
     val perFeed: Map<String, Int> = emptyMap(),
-    val perTag: Map<String, Int> = emptyMap(),
+    val perFolder: Map<String, Int> = emptyMap(),
 )
 
 data class RefreshSummary(
@@ -66,7 +66,7 @@ sealed interface ArticleScope {
     data object All : ArticleScope
     data object Unread : ArticleScope
     data class ForFeed(val feedId: String) : ArticleScope
-    data class ForTag(val tagId: String) : ArticleScope
+    data class ForFolder(val folderId: String) : ArticleScope
 }
 
 enum class ArticleSort(val label: String) {
@@ -82,7 +82,7 @@ enum class FeedSort(val label: String) {
     LAST_UPDATED("Last updated"),
 }
 
-enum class TagSort(val label: String) {
+enum class FolderSort(val label: String) {
     NAME("Name"),
     UNREAD("Unread count"),
 }
@@ -107,5 +107,5 @@ data class UserSettings(
     val refreshOnStartup: Boolean = true,
     val articleSort: ArticleSort = ArticleSort.NEWEST,
     val feedSort: FeedSort = FeedSort.NAME,
-    val tagSort: TagSort = TagSort.NAME,
+    val folderSort: FolderSort = FolderSort.NAME,
 )

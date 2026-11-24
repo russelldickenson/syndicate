@@ -1,18 +1,18 @@
 package com.zigzag.rssreader.core.data.mapper
 
 import com.zigzag.rssreader.core.database.dao.FeedRow
-import com.zigzag.rssreader.core.database.dao.TagRow
+import com.zigzag.rssreader.core.database.dao.FolderRow
 import com.zigzag.rssreader.core.database.model.ArticleEntity
 import com.zigzag.rssreader.core.database.model.FeedEntity
-import com.zigzag.rssreader.core.database.model.TagEntity
+import com.zigzag.rssreader.core.database.model.FolderEntity
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.Feed
-import com.zigzag.rssreader.core.domain.model.Tag
+import com.zigzag.rssreader.core.domain.model.Folder
 import com.zigzag.rssreader.core.network.model.ParsedArticle
 import kotlin.time.Clock
 import kotlinx.datetime.Instant
 
-internal fun FeedEntity.toDomain(tags: List<Tag> = emptyList(), unreadCount: Int = 0): Feed = Feed(
+internal fun FeedEntity.toDomain(unreadCount: Int = 0): Feed = Feed(
     id = id,
     url = url,
     title = title,
@@ -20,11 +20,11 @@ internal fun FeedEntity.toDomain(tags: List<Tag> = emptyList(), unreadCount: Int
     description = description,
     lastRefreshAt = lastRefreshAt?.let { Instant.fromEpochMilliseconds(it) },
     lastError = lastError,
-    tags = tags,
+    folderId = folderId,
     unreadCount = unreadCount,
 )
 
-internal fun FeedRow.toDomain(tags: List<Tag>, unreadCount: Int): Feed = Feed(
+internal fun FeedRow.toDomain(unreadCount: Int): Feed = Feed(
     id = id,
     url = url,
     title = title,
@@ -32,17 +32,17 @@ internal fun FeedRow.toDomain(tags: List<Tag>, unreadCount: Int): Feed = Feed(
     description = description,
     lastRefreshAt = lastRefreshAt?.let { Instant.fromEpochMilliseconds(it) },
     lastError = lastError,
-    tags = tags,
+    folderId = folderId,
     unreadCount = unreadCount,
 )
 
-internal fun TagEntity.toDomain(): Tag = Tag(
+internal fun FolderEntity.toDomain(): Folder = Folder(
     id = id,
     name = name,
     sortOrder = sortOrder,
 )
 
-internal fun TagRow.toDomain(): Tag = Tag(
+internal fun FolderRow.toDomain(): Folder = Folder(
     id = id,
     name = name,
     sortOrder = sortOrder,

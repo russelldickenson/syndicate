@@ -16,7 +16,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,7 @@ import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.UnreadBadge
 
 /**
- * The vertical navigation list: Feeds (All, Unread, every feed, manage), Tags,
+ * The vertical navigation list: Feeds (All, Unread, every feed, manage), Folders,
  * and Settings in its own section at the bottom.
  */
 @Composable
@@ -112,17 +112,17 @@ fun AppDrawer(
                 )
             }
 
-            if (state.tags.isNotEmpty()) {
-                item(key = "tags_header") {
-                    SectionHeader("Tags")
+            if (state.folders.isNotEmpty()) {
+                item(key = "folders_header") {
+                    SectionHeader("Folders")
                 }
-                items(items = state.tags, key = { "tag_${it.id}" }) { tag ->
+                items(items = state.folders, key = { "folder_${it.id}" }) { folder ->
                     DrawerRow(
-                        label = tag.name,
-                        icon = Icons.Filled.Tag,
-                        badge = state.unreadCounts.perTag[tag.id] ?: 0,
-                        selected = (currentDestination as? AppDestination.TagArticles)?.tagId == tag.id,
-                        onClick = { onNavigate(AppDestination.TagArticles(tag.id, tag.name)) },
+                        label = folder.name,
+                        icon = Icons.Filled.Folder,
+                        badge = state.unreadCounts.perFolder[folder.id] ?: 0,
+                        selected = (currentDestination as? AppDestination.FolderArticles)?.folderId == folder.id,
+                        onClick = { onNavigate(AppDestination.FolderArticles(folder.id, folder.name)) },
                     )
                 }
             }

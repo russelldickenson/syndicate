@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.ArticleScope
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.domain.repository.ArticleRepository
 import com.zigzag.rssreader.core.domain.repository.FeedRepository
@@ -80,8 +80,8 @@ class ArticlesViewModel @Inject constructor(
             setScope(
                 when (restored) {
                     "unread" -> ArticleScope.Unread
-                    "tag" -> savedStateHandle.get<String>("tagId")
-                        ?.let(ArticleScope::ForTag) ?: ArticleScope.All
+                    "folder" -> savedStateHandle.get<String>("folderId")
+                        ?.let(ArticleScope::ForFolder) ?: ArticleScope.All
                     "feed" -> savedStateHandle.get<String>("feedId")
                         ?.let(ArticleScope::ForFeed) ?: ArticleScope.All
                     else -> ArticleScope.All
@@ -159,7 +159,7 @@ class ArticlesViewModel @Inject constructor(
             ArticleScope.All -> "All articles"
             ArticleScope.Unread -> "Unread"
             is ArticleScope.ForFeed -> "Feed"
-            is ArticleScope.ForTag -> "Tag"
+            is ArticleScope.ForFolder -> "Folder"
         }
 
     private suspend fun resolveTitle(currentScope: ArticleScope): String =
@@ -171,11 +171,11 @@ class ArticlesViewModel @Inject constructor(
                     .firstOrNull()
                     ?.firstOrNull { it.id == currentScope.feedId }
                     ?.title ?: "Feed"
-            is ArticleScope.ForTag ->
-                feedRepository.observeTags(TagSort.NAME)
+            is ArticleScope.ForFolder ->
+                feedRepository.observeFolders(FolderSort.NAME)
                     .firstOrNull()
-                    ?.firstOrNull { it.id == currentScope.tagId }
-                    ?.name ?: "Tag"
+                    ?.firstOrNull { it.id == currentScope.folderId }
+                    ?.name ?: "Folder"
         }
 
     private fun String?.orUnknown(): String = takeIf { !isNullOrBlank() } ?: "unknown error"

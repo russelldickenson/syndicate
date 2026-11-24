@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.ThemeMode
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.domain.repository.FeedRepository
@@ -51,8 +51,8 @@ class SettingsViewModel @Inject constructor(
         update { it.copy(feedSort = sort) }
     }
 
-    fun setTagSort(sort: TagSort) {
-        update { it.copy(tagSort = sort) }
+    fun setFolderSort(sort: FolderSort) {
+        update { it.copy(folderSort = sort) }
     }
 
     private fun update(transform: (UserSettings) -> UserSettings) {

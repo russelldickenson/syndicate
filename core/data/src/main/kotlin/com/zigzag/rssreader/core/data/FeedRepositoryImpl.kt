@@ -7,16 +7,15 @@ import com.zigzag.rssreader.core.database.dao.ArticleDao
 import com.zigzag.rssreader.core.database.dao.FeedDao
 import com.zigzag.rssreader.core.database.dao.FeedRow
 import com.zigzag.rssreader.core.database.model.FeedEntity
-import com.zigzag.rssreader.core.database.model.FeedTagCrossRef
-import com.zigzag.rssreader.core.database.model.TagEntity
+import com.zigzag.rssreader.core.database.model.FolderEntity
 import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.domain.model.FeedAlreadyExistsException
 import com.zigzag.rssreader.core.domain.model.FeedPreview
 import com.zigzag.rssreader.core.domain.model.FeedRefreshError
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.RefreshSummary
-import com.zigzag.rssreader.core.domain.model.Tag
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.Folder
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.UnreadCounts
 import com.zigzag.rssreader.core.domain.repository.FeedRepository
 import com.zigzag.rssreader.core.network.FeedFetcher
@@ -38,13 +37,13 @@ class FeedRepositoryImpl @Inject constructor(
     override fun observeFeeds(sort: FeedSort): Flow<List<Feed>> =
         feedDao.observeFeeds(sort.name).map { rows -> groupFeeds(rows, sort) }
 
-    override fun observeTags(sort: TagSort): Flow<List<Tag>> =
-        feedDao.observeTags(sort.name).map { rows ->
-            val tags = rows.map { it.toDomain() }
+    override fun observeFolders(sort: FolderSort): Flow<List<Folder>> =
+        feedDao.observeFolders(sort.name).map { rows ->
+            val folders = rows.map { it.toDomain() }
             when (sort) {
-                TagSort.NAME -> tags.sortedBy { it.name.lowercase() }
-                TagSort.UNREAD -> tags.sortedWith(
-                    compareByDescending<Tag> { it.unreadCount }.thenBy { it.name.lowercase() },
+                FolderSort.NAME -> folders.sortedBy { it.name.lowercase() }
+                FolderSort.UNREAD -> folders.sortedWith(
+                    compareByDescending<Folder> { it.unreadCount }.thenBy { it.name.lowercase() },
                 )
             }
         }
@@ -52,12 +51,12 @@ class FeedRepositoryImpl @Inject constructor(
     override fun observeUnreadCounts(): Flow<UnreadCounts> = combine(
         feedDao.observeGlobalUnread(),
         feedDao.observeFeedUnread(),
-        feedDao.observeTagUnread(),
-    ) { global, feedRows, tagRows ->
+        feedDao.observeFolderUnread(),
+    ) { global, feedRows, folderRows ->
         UnreadCounts(
             global = global,
             perFeed = feedRows.associate { it.feedId to it.count },
-            perTag = tagRows.associate { it.tagId to it.count },
+            perFolder = folderRows.associate { it.folderId to it.count },
         )
     }
 
@@ -116,43 +115,45 @@ class FeedRepositoryImpl @Inject constructor(
     override suspend fun removeFeed(feedId: String) {
         withContext(dispatchers.io) {
             articleDao.deleteArticlesForFeed(feedId)
-            feedDao.deleteFeedTags(feedId)
             feedDao.deleteFeed(feedId)
         }
     }
 
-    override suspend fun setFeedTags(feedId: String, tagIds: Set<String>) {
+    override suspend fun setFeedFolder(feedId: String, folderId: String?) {
         withContext(dispatchers.io) {
-            feedDao.deleteAllLinksForFeed(feedId)
-            feedDao.insertLinks(tagIds.map { tagId -> FeedTagCrossRef(feedId, tagId) })
+            feedDao.setFeedFolder(feedId, folderId)
         }
     }
 
-    override suspend fun addTag(name: String): Result<Tag> = withContext(dispatchers.io) {
+    override suspend fun addFolder(name: String): Result<Folder> = withContext(dispatchers.io) {
         runCatching {
             val trimmed = name.trim()
-            require(trimmed.isNotBlank()) { "Tag name cannot be blank" }
-            require(feedDao.tagByName(trimmed) == null) { "A tag with this name already exists" }
-            val entity = TagEntity(
+            require(trimmed.isNotBlank()) { "Folder name cannot be blank" }
+            require(feedDao.folderByName(trimmed) == null) { "A folder with this name already exists" }
+            val entity = FolderEntity(
                 id = UUID.randomUUID().toString(),
                 name = trimmed,
-                sortOrder = feedDao.maxTagSortOrder() + 1,
+                sortOrder = feedDao.maxFolderSortOrder() + 1,
             )
-            feedDao.upsertTag(entity)
+            feedDao.upsertFolder(entity)
             entity.toDomain()
         }
     }
 
-    override suspend fun renameTag(tagId: String, name: String) {
+    override suspend fun renameFolder(folderId: String, name: String) {
         withContext(dispatchers.io) {
-            feedDao.updateTagName(tagId, name.trim())
+            val trimmed = name.trim()
+            require(trimmed.isNotBlank()) { "Folder name cannot be blank" }
+            val existing = feedDao.folderByName(trimmed)
+            require(existing == null || existing.id == folderId) { "A folder with this name already exists" }
+            feedDao.updateFolderName(folderId, trimmed)
         }
     }
 
-    override suspend fun removeTag(tagId: String) {
+    override suspend fun removeFolder(folderId: String) {
         withContext(dispatchers.io) {
-            feedDao.deleteTagLinks(tagId)
-            feedDao.deleteTag(tagId)
+            feedDao.clearFeedFolder(folderId)
+            feedDao.deleteFolder(folderId)
         }
     }
 
@@ -226,30 +227,7 @@ class FeedRepositoryImpl @Inject constructor(
     }
 
     private fun groupFeeds(rows: List<FeedRow>, sort: FeedSort): List<Feed> {
-        val tagsByFeed = LinkedHashMap<String, MutableList<Tag>>()
-        val firstRowByFeed = LinkedHashMap<String, FeedRow>()
-        for (row in rows) {
-            firstRowByFeed.putIfAbsent(row.id, row)
-            val tagId = row.tagId
-            val tagName = row.tagName
-            if (tagId != null && tagName != null) {
-                tagsByFeed.getOrPut(row.id) { mutableListOf() }.add(
-                    Tag(
-                        id = tagId,
-                        name = tagName,
-                        sortOrder = row.tagSortOrder ?: 0,
-                        unreadCount = row.tagUnreadCount ?: 0,
-                    ),
-                )
-            }
-        }
-
-        val feeds = firstRowByFeed.map { (id, row) ->
-            val tags = tagsByFeed[id].orEmpty().sortedWith(
-                compareBy<Tag> { it.sortOrder }.thenBy { it.name.lowercase() },
-            )
-            row.toDomain(tags = tags, unreadCount = row.unreadCount)
-        }
+        val feeds = rows.map { row -> row.toDomain(unreadCount = row.unreadCount) }
         return when (sort) {
             FeedSort.NAME -> feeds.sortedBy { it.title.lowercase() }
             FeedSort.UNREAD -> feeds.sortedWith(

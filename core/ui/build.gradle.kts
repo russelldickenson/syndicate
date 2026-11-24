@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.findLibrary("androidx-compose-material3").get())
     implementation(libs.findLibrary("coil-compose").get())
     implementation(libs.findLibrary("coil-network-okhttp").get())
+    implementation(libs.findLibrary("androidx-compose-material-icons-core").get())
 
     testImplementation(libs.findBundle("unit-test").get())
 }

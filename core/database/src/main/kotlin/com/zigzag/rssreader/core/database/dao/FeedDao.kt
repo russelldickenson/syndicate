@@ -1,18 +1,13 @@
 package com.zigzag.rssreader.core.database.dao
 
 import androidx.room3.Dao
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Upsert
 import com.zigzag.rssreader.core.database.model.FeedEntity
-import com.zigzag.rssreader.core.database.model.FeedTagCrossRef
-import com.zigzag.rssreader.core.database.model.TagEntity
+import com.zigzag.rssreader.core.database.model.FolderEntity
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Flattened feed + tag row. Feeds with no tags still produce one row with null tag columns.
- */
+/** A feed row; [folderId] is null when the feed is not in a folder. */
 data class FeedRow(
     val id: String,
     val url: String,
@@ -22,13 +17,10 @@ data class FeedRow(
     val lastRefreshAt: Long?,
     val lastError: String?,
     val unreadCount: Int,
-    val tagId: String?,
-    val tagName: String?,
-    val tagSortOrder: Int?,
-    val tagUnreadCount: Int?,
+    val folderId: String?,
 )
 
-data class TagRow(
+data class FolderRow(
     val id: String,
     val name: String,
     val sortOrder: Int,
@@ -40,8 +32,8 @@ data class FeedUnreadRow(
     val count: Int,
 )
 
-data class TagUnreadRow(
-    val tagId: String,
+data class FolderUnreadRow(
+    val folderId: String,
     val count: Int,
 )
 
@@ -66,15 +58,8 @@ interface FeedDao {
             f.lastError AS lastError,
             (SELECT COUNT(*) FROM articles a
              WHERE a.feedId = f.id AND a.isRead = 0) AS unreadCount,
-            t.id AS tagId,
-            t.name AS tagName,
-            t.sortOrder AS tagSortOrder,
-            (SELECT COUNT(*) FROM feed_tags ft2
-             INNER JOIN articles a2 ON a2.feedId = ft2.feedId
-             WHERE ft2.tagId = t.id AND a2.isRead = 0) AS tagUnreadCount
+            f.folderId AS folderId
         FROM feeds f
-        LEFT JOIN feed_tags ft ON ft.feedId = f.id
-        LEFT JOIN tags t ON t.id = ft.tagId
         ORDER BY
             CASE WHEN :sortKey = 'NAME' THEN LOWER(f.title) END ASC,
             CASE WHEN :sortKey = 'UNREAD' THEN
@@ -89,24 +74,24 @@ interface FeedDao {
     @Query(
         """
         SELECT
-            t.id AS id,
-            t.name AS name,
-            t.sortOrder AS sortOrder,
-            (SELECT COUNT(*) FROM feed_tags ft
-             INNER JOIN articles a ON a.feedId = ft.feedId
-             WHERE ft.tagId = t.id AND a.isRead = 0) AS unreadCount
-        FROM tags t
+            fo.id AS id,
+            fo.name AS name,
+            fo.sortOrder AS sortOrder,
+            (SELECT COUNT(*) FROM feeds f
+             INNER JOIN articles a ON a.feedId = f.id
+             WHERE f.folderId = fo.id AND a.isRead = 0) AS unreadCount
+        FROM folders fo
         ORDER BY
-            CASE WHEN :sortKey = 'NAME' THEN LOWER(t.name) END ASC,
+            CASE WHEN :sortKey = 'NAME' THEN LOWER(fo.name) END ASC,
             CASE WHEN :sortKey = 'UNREAD' THEN
-                (SELECT COUNT(*) FROM feed_tags ft2
-                 INNER JOIN articles a2 ON a2.feedId = ft2.feedId
-                 WHERE ft2.tagId = t.id AND a2.isRead = 0) END DESC,
-            t.sortOrder ASC,
-            t.id ASC
+                (SELECT COUNT(*) FROM feeds f2
+                 INNER JOIN articles a2 ON a2.feedId = f2.id
+                 WHERE f2.folderId = fo.id AND a2.isRead = 0) END DESC,
+            fo.sortOrder ASC,
+            fo.id ASC
         """,
     )
-    fun observeTags(sortKey: String): Flow<List<TagRow>>
+    fun observeFolders(sortKey: String): Flow<List<FolderRow>>
 
     @Query("SELECT COUNT(*) FROM articles WHERE isRead = 0")
     fun observeGlobalUnread(): Flow<Int>
@@ -116,14 +101,14 @@ interface FeedDao {
 
     @Query(
         """
-        SELECT ft.tagId AS tagId, COUNT(*) AS count
-        FROM feed_tags ft
-        INNER JOIN articles a ON a.feedId = ft.feedId
-        WHERE a.isRead = 0
-        GROUP BY ft.tagId
+        SELECT f.folderId AS folderId, COUNT(*) AS count
+        FROM feeds f
+        INNER JOIN articles a ON a.feedId = f.id
+        WHERE a.isRead = 0 AND f.folderId IS NOT NULL
+        GROUP BY f.folderId
         """,
     )
-    fun observeTagUnread(): Flow<List<TagUnreadRow>>
+    fun observeFolderUnread(): Flow<List<FolderUnreadRow>>
 
     @Query("SELECT id AS id, title AS title, siteUrl AS siteUrl, url AS url FROM feeds")
     fun observeFeedTitles(): Flow<List<FeedTitleRow>>
@@ -137,39 +122,33 @@ interface FeedDao {
     @Query("SELECT * FROM feeds")
     suspend fun allFeeds(): List<FeedEntity>
 
-    @Query("SELECT * FROM tags WHERE id = :id")
-    suspend fun tagById(id: String): TagEntity?
+    @Query("SELECT * FROM folders WHERE id = :id")
+    suspend fun folderById(id: String): FolderEntity?
 
-    @Query("SELECT * FROM tags WHERE LOWER(name) = LOWER(:name) LIMIT 1")
-    suspend fun tagByName(name: String): TagEntity?
+    @Query("SELECT * FROM folders WHERE LOWER(name) = LOWER(:name) LIMIT 1")
+    suspend fun folderByName(name: String): FolderEntity?
 
-    @Query("SELECT COALESCE(MAX(sortOrder), -1) FROM tags")
-    suspend fun maxTagSortOrder(): Int
+    @Query("SELECT COALESCE(MAX(sortOrder), -1) FROM folders")
+    suspend fun maxFolderSortOrder(): Int
 
     @Upsert
     suspend fun upsertFeeds(feeds: List<FeedEntity>)
 
     @Upsert
-    suspend fun upsertTag(tag: TagEntity)
+    suspend fun upsertFolder(folder: FolderEntity)
 
-    @Query("UPDATE tags SET name = :name WHERE id = :id")
-    suspend fun updateTagName(id: String, name: String)
+    @Query("UPDATE folders SET name = :name WHERE id = :id")
+    suspend fun updateFolderName(id: String, name: String)
+
+    @Query("UPDATE feeds SET folderId = :folderId WHERE id = :feedId")
+    suspend fun setFeedFolder(feedId: String, folderId: String?)
+
+    @Query("UPDATE feeds SET folderId = NULL WHERE folderId = :folderId")
+    suspend fun clearFeedFolder(folderId: String)
+
+    @Query("DELETE FROM folders WHERE id = :id")
+    suspend fun deleteFolder(id: String)
 
     @Query("DELETE FROM feeds WHERE id = :id")
     suspend fun deleteFeed(id: String)
-
-    @Query("DELETE FROM feed_tags WHERE feedId = :feedId")
-    suspend fun deleteFeedTags(feedId: String)
-
-    @Query("DELETE FROM feed_tags WHERE feedId = :feedId")
-    suspend fun deleteAllLinksForFeed(feedId: String)
-
-    @Query("DELETE FROM feed_tags WHERE tagId = :tagId")
-    suspend fun deleteTagLinks(tagId: String)
-
-    @Query("DELETE FROM tags WHERE id = :id")
-    suspend fun deleteTag(id: String)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertLinks(links: List<FeedTagCrossRef>)
 }

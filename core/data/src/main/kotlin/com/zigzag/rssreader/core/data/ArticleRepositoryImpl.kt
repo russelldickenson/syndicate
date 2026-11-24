@@ -18,13 +18,13 @@ private val ArticleScope.queryKind: String
         ArticleScope.All -> "ALL"
         ArticleScope.Unread -> "UNREAD"
         is ArticleScope.ForFeed -> "FEED"
-        is ArticleScope.ForTag -> "TAG"
+        is ArticleScope.ForFolder -> "FOLDER"
     }
 
 private val ArticleScope.queryId: String
     get() = when (this) {
         is ArticleScope.ForFeed -> feedId
-        is ArticleScope.ForTag -> tagId
+        is ArticleScope.ForFolder -> folderId
         else -> ""
     }
 

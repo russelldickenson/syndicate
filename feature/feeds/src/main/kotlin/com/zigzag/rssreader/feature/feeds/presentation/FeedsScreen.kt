@@ -1,5 +1,6 @@
 package com.zigzag.rssreader.feature.feeds.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +19,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,14 +50,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.ArticleScope
 import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.FolderSort
+import com.zigzag.rssreader.core.domain.model.Folder
 import com.zigzag.rssreader.core.ui.components.EmptyState
 import com.zigzag.rssreader.core.ui.components.ErrorMessage
 import com.zigzag.rssreader.core.ui.components.FeedRow
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
 import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.SortSheet
-import com.zigzag.rssreader.core.ui.components.TagRow
+import com.zigzag.rssreader.core.ui.components.FolderRow
 
 @Composable
 fun FeedsRoute(
@@ -85,7 +87,7 @@ internal fun FeedsScreen(
     onOpenDrawer: () -> Unit,
 ) {
     var showFeedSortSheet by remember { mutableStateOf(false) }
-    var showTagSortSheet by remember { mutableStateOf(false) }
+    var showFolderSortSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -103,8 +105,8 @@ internal fun FeedsScreen(
                         modifier = Modifier.semantics { contentDescription = "Sort feeds" },
                     ) { Icon(Icons.Filled.Sort, contentDescription = null) }
                     IconButton(
-                        onClick = { showTagSortSheet = true },
-                        modifier = Modifier.semantics { contentDescription = "Sort tags" },
+                        onClick = { showFolderSortSheet = true },
+                        modifier = Modifier.semantics { contentDescription = "Sort folders" },
                     ) { Icon(Icons.Filled.SwapVert, contentDescription = null) }
                     IconButton(
                         onClick = viewModel::refreshAll,
@@ -153,9 +155,10 @@ internal fun FeedsScreen(
             } else {
                 FeedList(
                     state = state,
-                    onTagClick = { tagId -> onNavigateToArticles(ArticleScope.ForTag(tagId)) },
+                    onFolderClick = { folderId -> onNavigateToArticles(ArticleScope.ForFolder(folderId)) },
                     onFeedClick = { feedId -> onNavigateToArticles(ArticleScope.ForFeed(feedId)) },
-                    onEditTags = viewModel::openTagEditor,
+                    onEditFolder = viewModel::openFolderEditor,
+                    onEditFolderDetails = viewModel::openFolderNameEditor,
                 )
             }
         }
@@ -172,14 +175,14 @@ internal fun FeedsScreen(
         )
     }
 
-    if (showTagSortSheet) {
+    if (showFolderSortSheet) {
         SortSheet(
-            title = "Sort tags",
-            options = TagSort.entries,
-            selected = state.tagSort,
-            onSelect = viewModel::setTagSort,
+            title = "Sort folders",
+            options = FolderSort.entries,
+            selected = state.folderSort,
+            onSelect = viewModel::setFolderSort,
             label = { it.label },
-            onDismiss = { showTagSortSheet = false },
+            onDismiss = { showFolderSortSheet = false },
         )
     }
 
@@ -196,28 +199,34 @@ internal fun FeedsScreen(
         ConfirmFeedDialog(state = state, viewModel = viewModel, onViewFeed = viewFeed)
     }
 
-    state.tagEditorFeedId?.let { feedId ->
-        TagEditorDialog(feedId = feedId, state = state, viewModel = viewModel)
+    state.folderEditorFeedId?.let { feedId ->
+        FolderEditorDialog(feedId = feedId, state = state, viewModel = viewModel)
+    }
+
+    state.editingFolderId?.let { folderId ->
+        FolderNameEditorDialog(folderId = folderId, state = state, viewModel = viewModel)
     }
 }
 
 @Composable
 private fun FeedList(
     state: FeedsUiState,
-    onTagClick: (String) -> Unit,
+    onFolderClick: (String) -> Unit,
     onFeedClick: (String) -> Unit,
-    onEditTags: (Feed) -> Unit,
+    onEditFolder: (Feed) -> Unit,
+    onEditFolderDetails: (Folder) -> Unit,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        if (state.tags.isNotEmpty()) {
-            item(key = "tags_header") { SectionHeader("Tags") }
-            items(items = state.tags, key = { it.id }) { tag ->
+        if (state.folders.isNotEmpty()) {
+            item(key = "folders_header") { SectionHeader("Folders") }
+            items(items = state.folders, key = { it.id }) { folder ->
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-                    TagRow(
-                        tag = tag.copy(
-                            unreadCount = state.unreadCounts.perTag[tag.id] ?: 0,
+                    FolderRow(
+                        folder = folder.copy(
+                            unreadCount = state.unreadCounts.perFolder[folder.id] ?: 0,
                         ),
-                        onClick = { onTagClick(tag.id) },
+                        onClick = { onFolderClick(folder.id) },
+                        onEdit = { onEditFolderDetails(folder) },
                     )
                 }
             }
@@ -230,7 +239,7 @@ private fun FeedList(
                         unreadCount = state.unreadCounts.perFeed[feed.id] ?: feed.unreadCount,
                     ),
                     onFeedClick = { onFeedClick(feed.id) },
-                    onEditTags = { onEditTags(feed) },
+                    onEditFolder = { onEditFolder(feed) },
                 )
             }
         }
@@ -350,55 +359,94 @@ private fun ConfirmFeedDialog(
 }
 
 @Composable
-private fun TagEditorDialog(feedId: String, state: FeedsUiState, viewModel: FeedsViewModel) {
+private fun FolderEditorDialog(feedId: String, state: FeedsUiState, viewModel: FeedsViewModel) {
     AlertDialog(
-        onDismissRequest = viewModel::closeTagEditor,
-        title = { Text("Tags for ${state.tagEditorFeedTitle}") },
+        onDismissRequest = viewModel::closeFolderEditor,
+        title = { Text("Folder for ${state.folderEditorFeedTitle}") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                state.tags.forEach { tag ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.selectFolder(null) },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(
+                        selected = state.selectedFolderId == null,
+                        onClick = { viewModel.selectFolder(null) },
+                    )
+                    Text("No folder")
+                }
+                state.folders.forEach { folder ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.selectFolder(folder.id) },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Checkbox(
-                            checked = tag.id in state.selectedTagIds,
-                            onCheckedChange = { viewModel.toggleTagSelection(tag.id) },
+                        RadioButton(
+                            selected = state.selectedFolderId == folder.id,
+                            onClick = { viewModel.selectFolder(folder.id) },
                         )
-                        Text(text = tag.name, modifier = Modifier.weight(1f))
+                        Text(text = folder.name, modifier = Modifier.weight(1f))
                     }
-                }
-                if (state.tags.isEmpty()) {
-                    Text("No tags yet. Create one below.")
                 }
                 Spacer(Modifier.height(12.dp))
                 TextField(
-                    value = state.newTagNameInput,
-                    onValueChange = viewModel::onNewTagChanged,
-                    label = { Text("New tag") },
+                    value = state.newFolderNameInput,
+                    onValueChange = viewModel::onNewFolderChanged,
+                    label = { Text("New folder") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(4.dp))
-                TextButton(onClick = { viewModel.addTag(state.newTagNameInput) }) {
-                    Text("Create tag")
+                TextButton(onClick = { viewModel.addFolder(state.newFolderNameInput) }) {
+                    Text("Create folder")
                 }
-                Text(
-                    text = "Selected: ${state.selectedTagIds.size}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { viewModel.setFeedTags(feedId, state.selectedTagIds) },
+                onClick = { viewModel.setFeedFolder(feedId, state.selectedFolderId) },
                 enabled = !state.isSaving,
             ) { Text("Save") }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::closeTagEditor) { Text("Cancel") }
+            TextButton(onClick = viewModel::closeFolderEditor) { Text("Cancel") }
+        },
+    )
+}
+
+@Composable
+private fun FolderNameEditorDialog(
+    folderId: String,
+    state: FeedsUiState,
+    viewModel: FeedsViewModel,
+) {
+    AlertDialog(
+        onDismissRequest = viewModel::closeFolderNameEditor,
+        title = { Text("Edit folder") },
+        text = {
+            Column {
+                TextField(
+                    value = state.editingFolderName,
+                    onValueChange = viewModel::onEditingFolderNameChanged,
+                    label = { Text("Folder name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = { viewModel.removeFolder(folderId) }) {
+                    Text("Delete folder")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { viewModel.renameFolder(folderId, state.editingFolderName) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = viewModel::closeFolderNameEditor) { Text("Cancel") }
         },
     )
 }

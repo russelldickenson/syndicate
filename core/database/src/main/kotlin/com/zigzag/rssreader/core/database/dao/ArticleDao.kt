@@ -19,8 +19,8 @@ interface ArticleDao {
                 :scopeKind = 'ALL'
                 OR (:scopeKind = 'UNREAD' AND a.isRead = 0)
                 OR (:scopeKind = 'FEED' AND a.feedId = :scopeId)
-                OR (:scopeKind = 'TAG' AND a.feedId IN (
-                    SELECT ft.feedId FROM feed_tags ft WHERE ft.tagId = :scopeId
+                OR (:scopeKind = 'FOLDER' AND a.feedId IN (
+                    SELECT f.id FROM feeds f WHERE f.folderId = :scopeId
                 ))
             )
             AND (:unreadOnly = 0 OR a.isRead = 0)
@@ -52,8 +52,8 @@ interface ArticleDao {
             :scopeKind = 'ALL'
             OR (:scopeKind = 'UNREAD' AND isRead = 0)
             OR (:scopeKind = 'FEED' AND feedId = :scopeId)
-            OR (:scopeKind = 'TAG' AND feedId IN (
-                SELECT ft.feedId FROM feed_tags ft WHERE ft.tagId = :scopeId
+            OR (:scopeKind = 'FOLDER' AND feedId IN (
+                SELECT id FROM feeds WHERE folderId = :scopeId
             ))
         """,
     )

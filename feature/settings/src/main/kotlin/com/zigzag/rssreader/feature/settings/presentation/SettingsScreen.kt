@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.ThemeMode
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.ui.components.SectionHeader
@@ -151,11 +151,11 @@ internal fun SettingsScreen(
                     onClick = { sortSheet = SortKind.FEEDS },
                 )
             }
-            item(key = "sort_tags") {
+            item(key = "sort_folders") {
                 PreferenceRow(
-                    label = "Tags",
-                    value = settings.tagSort.label,
-                    onClick = { sortSheet = SortKind.TAGS },
+                    label = "Folders",
+                    value = settings.folderSort.label,
+                    onClick = { sortSheet = SortKind.FOLDERS },
                 )
             }
         }
@@ -178,11 +178,11 @@ internal fun SettingsScreen(
             label = { it.label },
             onDismiss = { sortSheet = null },
         )
-        SortKind.TAGS -> SortSheet(
-            title = "Sort tags",
-            options = TagSort.entries,
-            selected = settings.tagSort,
-            onSelect = viewModel::setTagSort,
+        SortKind.FOLDERS -> SortSheet(
+            title = "Sort folders",
+            options = FolderSort.entries,
+            selected = settings.folderSort,
+            onSelect = viewModel::setFolderSort,
             label = { it.label },
             onDismiss = { sortSheet = null },
         )
@@ -237,4 +237,4 @@ private fun PreferenceRow(
     }
 }
 
-private enum class SortKind { ARTICLES, FEEDS, TAGS }
+private enum class SortKind { ARTICLES, FEEDS, FOLDERS }

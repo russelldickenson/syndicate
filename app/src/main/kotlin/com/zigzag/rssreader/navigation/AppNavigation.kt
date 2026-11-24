@@ -19,8 +19,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.zigzag.rssreader.core.domain.model.ArticleScope
 import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.Tag
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.Folder
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.UnreadCounts
 import com.zigzag.rssreader.core.domain.repository.FeedRepository
 import com.zigzag.rssreader.feature.articles.presentation.ArticlesRoute
@@ -51,7 +51,7 @@ sealed interface AppDestination : NavKey {
     data object Settings : AppDestination
 
     @Serializable
-    data class TagArticles(val tagId: String, val title: String) : AppDestination
+    data class FolderArticles(val folderId: String, val title: String) : AppDestination
 
     @Serializable
     data class FeedArticles(val feedId: String, val title: String) : AppDestination
@@ -67,10 +67,10 @@ class DrawerViewModel @Inject constructor(
 
     val drawerState: StateFlow<DrawerViewModelState> =
         combine(
-            feedRepository.observeTags(TagSort.NAME),
+            feedRepository.observeFolders(FolderSort.NAME),
             feedRepository.observeFeeds(FeedSort.NAME),
             feedRepository.observeUnreadCounts(),
-        ) { tags, feeds, counts -> DrawerViewModelState(tags, counts, feeds) }
+        ) { folders, feeds, counts -> DrawerViewModelState(folders, counts, feeds) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -83,7 +83,7 @@ class DrawerViewModel @Inject constructor(
 }
 
 data class DrawerViewModelState(
-    val tags: List<Tag>,
+    val folders: List<Folder>,
     val unreadCounts: UnreadCounts,
     val feeds: List<Feed> = emptyList(),
 )
@@ -115,9 +115,10 @@ fun AppNavigation() {
 
     fun openScope(scope: ArticleScope) {
         when (scope) {
-            is ArticleScope.ForTag -> {
-                val title = appDrawerState.tags.firstOrNull { it.id == scope.tagId }?.name ?: scope.tagId
-                backStack.add(AppDestination.TagArticles(scope.tagId, title))
+            is ArticleScope.ForFolder -> {
+                val title = appDrawerState.folders.firstOrNull { it.id == scope.folderId }?.name
+                    ?: scope.folderId
+                backStack.add(AppDestination.FolderArticles(scope.folderId, title))
             }
             is ArticleScope.ForFeed -> {
                 val title = appDrawerState.feeds.firstOrNull { it.id == scope.feedId }?.title ?: scope.feedId
@@ -152,9 +153,9 @@ fun AppNavigation() {
                 onOpenDrawer = openDrawer,
             )
         }
-        entry<AppDestination.TagArticles> { key ->
+        entry<AppDestination.FolderArticles> { key ->
             ArticlesRoute(
-                scope = ArticleScope.ForTag(key.tagId),
+                scope = ArticleScope.ForFolder(key.folderId),
                 title = key.title,
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },

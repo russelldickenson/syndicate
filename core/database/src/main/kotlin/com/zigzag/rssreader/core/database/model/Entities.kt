@@ -17,24 +17,15 @@ data class FeedEntity(
     val description: String? = null,
     val lastRefreshAt: Long? = null,
     val lastError: String? = null,
+    val folderId: String? = null,
 )
 
-@Entity(tableName = "tags")
-data class TagEntity(
+@Entity(tableName = "folders")
+data class FolderEntity(
     @PrimaryKey
     val id: String,
     val name: String,
     val sortOrder: Int = 0,
-)
-
-@Entity(
-    tableName = "feed_tags",
-    primaryKeys = ["feedId", "tagId"],
-    indices = [Index(value = ["tagId"])],
-)
-data class FeedTagCrossRef(
-    val feedId: String,
-    val tagId: String,
 )
 
 @Entity(

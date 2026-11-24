@@ -10,5 +10,5 @@ object SettingsKeys {
     val REFRESH_ON_STARTUP = booleanPreferencesKey("refresh_on_startup")
     val ARTICLE_SORT = stringPreferencesKey("article_sort")
     val FEED_SORT = stringPreferencesKey("feed_sort")
-    val TAG_SORT = stringPreferencesKey("tag_sort")
+    val FOLDER_SORT = stringPreferencesKey("folder_sort")
 }

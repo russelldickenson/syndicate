@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,12 +38,12 @@ import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.Feed
-import com.zigzag.rssreader.core.domain.model.Tag
+import com.zigzag.rssreader.core.domain.model.Folder
 import com.zigzag.rssreader.core.ui.util.formatArticleDateTime
 import java.net.URI
 
 @Composable
-fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditTags: () -> Unit) {
+fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditFolder: () -> Unit) {
     val faviconBase = feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url
     val faviconUrls = remember(faviconBase) { faviconCandidates(faviconBase) }
     Surface(
@@ -81,15 +87,20 @@ fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditTags: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             UnreadBadge(count = feed.unreadCount)
             Spacer(Modifier.width(8.dp))
-            TextButton(onClick = onEditTags) {
-                Text(text = "Tags")
+            TextButton(onClick = onEditFolder) {
+                Text(text = "Folder")
             }
         }
     }
 }
 
 @Composable
-fun TagRow(tag: Tag, onClick: () -> Unit, selected: Boolean = false) {
+fun FolderRow(
+    folder: Folder,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    selected: Boolean = false,
+) {
     val containerColor = if (selected) {
         MaterialTheme.colorScheme.secondaryContainer
     } else {
@@ -107,7 +118,7 @@ fun TagRow(tag: Tag, onClick: () -> Unit, selected: Boolean = false) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = tag.name,
+                text = folder.name,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
@@ -115,7 +126,12 @@ fun TagRow(tag: Tag, onClick: () -> Unit, selected: Boolean = false) {
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.width(8.dp))
-            UnreadBadge(count = tag.unreadCount)
+            UnreadBadge(count = folder.unreadCount)
+            IconButton(onClick = onEdit, modifier = Modifier.semantics {
+                contentDescription = "Edit folder ${folder.name}"
+            }) {
+                Icon(Icons.Filled.Edit, contentDescription = null)
+            }
         }
     }
 }

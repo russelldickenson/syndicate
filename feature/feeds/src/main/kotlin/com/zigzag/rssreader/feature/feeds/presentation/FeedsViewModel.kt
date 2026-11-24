@@ -6,8 +6,8 @@ import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.domain.model.FeedAlreadyExistsException
 import com.zigzag.rssreader.core.domain.model.FeedPreview
 import com.zigzag.rssreader.core.domain.model.FeedSort
-import com.zigzag.rssreader.core.domain.model.Tag
-import com.zigzag.rssreader.core.domain.model.TagSort
+import com.zigzag.rssreader.core.domain.model.Folder
+import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.UnreadCounts
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.domain.repository.ArticleRepository
@@ -33,32 +33,32 @@ class FeedsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val feedSort = MutableStateFlow(FeedSort.NAME)
-    private val tagSort = MutableStateFlow(TagSort.NAME)
+    private val folderSort = MutableStateFlow(FolderSort.NAME)
     private val refreshing = MutableStateFlow(false)
     private val errorMessage = MutableStateFlow<String?>(null)
     private val dialog = MutableStateFlow(FeedsDialogState())
 
     private val feedsFlow: Flow<List<Feed>> =
         feedSort.flatMapLatest { sort -> feedRepository.observeFeeds(sort) }
-    private val tagsFlow: Flow<List<Tag>> =
-        tagSort.flatMapLatest { sort -> feedRepository.observeTags(sort) }
+    private val foldersFlow: Flow<List<Folder>> =
+        folderSort.flatMapLatest { sort -> feedRepository.observeFolders(sort) }
     private val unreadCountsFlow: Flow<UnreadCounts> = feedRepository.observeUnreadCounts()
 
     val uiState: StateFlow<FeedsUiState> =
         combine(
-            combine(feedsFlow, tagsFlow, unreadCountsFlow) { feeds, tags, counts ->
-                FeedData(feeds, tags, counts)
+            combine(feedsFlow, foldersFlow, unreadCountsFlow) { feeds, folders, counts ->
+                FeedData(feeds, folders, counts)
             },
-            combine(feedSort, tagSort) { feed, tag -> SortData(feed, tag) },
+            combine(feedSort, folderSort) { feed, folder -> SortData(feed, folder) },
             combine(refreshing, errorMessage) { isRefreshing, error -> StatusData(isRefreshing, error) },
             dialog,
         ) { data, sorts, status, dialogState ->
             FeedsUiState(
                 feeds = data.feeds,
-                tags = data.tags,
+                folders = data.folders,
                 unreadCounts = data.counts,
                 sort = sorts.feed,
-                tagSort = sorts.tag,
+                folderSort = sorts.folder,
                 isRefreshing = status.isRefreshing,
                 error = status.error,
                 showAddFeedDialog = dialogState.showAddFeed,
@@ -67,10 +67,12 @@ class FeedsViewModel @Inject constructor(
                 feedPreviewTitle = dialogState.feedPreview?.title.orEmpty(),
                 feedPreviewUrl = dialogState.feedPreview?.url.orEmpty(),
                 duplicateFeedId = dialogState.duplicateFeed?.id,
-                tagEditorFeedId = dialogState.tagEditorFeedId,
-                tagEditorFeedTitle = dialogState.tagEditorFeedTitle,
-                newTagNameInput = dialogState.newTagNameInput,
-                selectedTagIds = dialogState.selectedTagIds,
+                folderEditorFeedId = dialogState.folderEditorFeedId,
+                folderEditorFeedTitle = dialogState.folderEditorFeedTitle,
+                newFolderNameInput = dialogState.newFolderNameInput,
+                selectedFolderId = dialogState.selectedFolderId,
+                editingFolderId = dialogState.editingFolderId,
+                editingFolderName = dialogState.editingFolderName,
                 isSaving = dialogState.isSaving,
             )
         }.stateIn(
@@ -84,7 +86,7 @@ class FeedsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.observeSettings().collect { settings ->
                 feedSort.value = settings.feedSort
-                tagSort.value = settings.tagSort
+                folderSort.value = settings.folderSort
             }
         }
     }
@@ -148,53 +150,55 @@ class FeedsViewModel @Inject constructor(
         }
     }
 
-    fun setFeedTags(feedId: String, tagIds: Set<String>) {
+    fun setFeedFolder(feedId: String, folderId: String?) {
         dialog.updateCopy { copy(isSaving = true) }
         viewModelScope.launch {
-            runCatching { feedRepository.setFeedTags(feedId, tagIds) }
-                .onSuccess { dialog.updateCopy { copy(tagEditorFeedId = null, selectedTagIds = emptySet(), isSaving = false) } }
+            runCatching { feedRepository.setFeedFolder(feedId, folderId) }
+                .onSuccess { dialog.updateCopy { copy(folderEditorFeedId = null, isSaving = false) } }
                 .onFailure {
-                    errorMessage.value = "Couldn't update tags: ${it.message.orUnknown()}"
+                    errorMessage.value = "Couldn't update folder: ${it.message.orUnknown()}"
                     dialog.updateCopy { copy(isSaving = false) }
                 }
         }
     }
 
-    fun addTag(name: String) {
+    fun addFolder(name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            errorMessage.value = "Enter a tag name."
+            errorMessage.value = "Enter a folder name."
             return
         }
         viewModelScope.launch {
-            feedRepository.addTag(trimmed).fold(
-                onSuccess = { tag ->
+            feedRepository.addFolder(trimmed).fold(
+                onSuccess = { folder ->
                     dialog.updateCopy {
-                        copy(newTagNameInput = "", selectedTagIds = selectedTagIds + tag.id)
+                        copy(newFolderNameInput = "", selectedFolderId = folder.id)
                     }
                     errorMessage.value = null
                 },
-                onFailure = { errorMessage.value = "Couldn't add tag: ${it.message.orUnknown()}" },
+                onFailure = { errorMessage.value = "Couldn't add folder: ${it.message.orUnknown()}" },
             )
         }
     }
 
-    fun renameTag(tagId: String, name: String) {
+    fun renameFolder(folderId: String, name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            errorMessage.value = "Enter a tag name."
+            errorMessage.value = "Enter a folder name."
             return
         }
         viewModelScope.launch {
-            runCatching { feedRepository.renameTag(tagId, trimmed) }
-                .onFailure { errorMessage.value = "Couldn't rename tag: ${it.message.orUnknown()}" }
+            runCatching { feedRepository.renameFolder(folderId, trimmed) }
+                .onSuccess { dialog.updateCopy { copy(editingFolderId = null) } }
+                .onFailure { errorMessage.value = "Couldn't rename folder: ${it.message.orUnknown()}" }
         }
     }
 
-    fun removeTag(tagId: String) {
+    fun removeFolder(folderId: String) {
         viewModelScope.launch {
-            runCatching { feedRepository.removeTag(tagId) }
-                .onFailure { errorMessage.value = "Couldn't remove tag: ${it.message.orUnknown()}" }
+            runCatching { feedRepository.removeFolder(folderId) }
+                .onSuccess { dialog.updateCopy { copy(editingFolderId = null) } }
+                .onFailure { errorMessage.value = "Couldn't remove folder: ${it.message.orUnknown()}" }
         }
     }
 
@@ -203,9 +207,9 @@ class FeedsViewModel @Inject constructor(
         persistSettings { it.copy(feedSort = sort) }
     }
 
-    fun setTagSort(sort: TagSort) {
-        tagSort.value = sort
-        persistSettings { it.copy(tagSort = sort) }
+    fun setFolderSort(sort: FolderSort) {
+        folderSort.value = sort
+        persistSettings { it.copy(folderSort = sort) }
     }
 
     fun refreshAll() {
@@ -249,35 +253,41 @@ class FeedsViewModel @Inject constructor(
         dialog.updateCopy { copy(feedUrlInput = value, duplicateFeed = null) }
     }
 
-    fun openTagEditor(feed: Feed) {
+    fun openFolderEditor(feed: Feed) {
         dialog.updateCopy {
             copy(
-                tagEditorFeedId = feed.id,
-                tagEditorFeedTitle = feed.title,
-                selectedTagIds = feed.tags.map { it.id }.toSet(),
-                newTagNameInput = "",
+                folderEditorFeedId = feed.id,
+                folderEditorFeedTitle = feed.title,
+                selectedFolderId = feed.folderId,
+                newFolderNameInput = "",
             )
         }
     }
 
-    fun closeTagEditor() {
-        dialog.updateCopy { copy(tagEditorFeedId = null, selectedTagIds = emptySet(), isSaving = false) }
+    fun closeFolderEditor() {
+        dialog.updateCopy { copy(folderEditorFeedId = null, isSaving = false) }
     }
 
-    fun onNewTagChanged(value: String) {
-        dialog.updateCopy { copy(newTagNameInput = value) }
+    fun onNewFolderChanged(value: String) {
+        dialog.updateCopy { copy(newFolderNameInput = value) }
     }
 
-    fun toggleTagSelection(tagId: String) {
+    fun selectFolder(folderId: String?) {
+        dialog.updateCopy { copy(selectedFolderId = folderId) }
+    }
+
+    fun openFolderNameEditor(folder: Folder) {
         dialog.updateCopy {
-            copy(
-                selectedTagIds = if (tagId in selectedTagIds) {
-                    selectedTagIds - tagId
-                } else {
-                    selectedTagIds + tagId
-                },
-            )
+            copy(editingFolderId = folder.id, editingFolderName = folder.name)
         }
+    }
+
+    fun onEditingFolderNameChanged(value: String) {
+        dialog.updateCopy { copy(editingFolderName = value) }
+    }
+
+    fun closeFolderNameEditor() {
+        dialog.updateCopy { copy(editingFolderId = null) }
     }
 
     fun clearError() {
@@ -315,11 +325,11 @@ class FeedsViewModel @Inject constructor(
 
     private data class FeedData(
         val feeds: List<Feed>,
-        val tags: List<Tag>,
+        val folders: List<Folder>,
         val counts: UnreadCounts,
     )
 
-    private data class SortData(val feed: FeedSort, val tag: TagSort)
+    private data class SortData(val feed: FeedSort, val folder: FolderSort)
 
     private data class StatusData(val isRefreshing: Boolean, val error: String?)
 
@@ -331,10 +341,12 @@ class FeedsViewModel @Inject constructor(
         val feedUrlInput: String = "",
         val feedPreview: FeedPreview? = null,
         val duplicateFeed: DuplicateFeed? = null,
-        val tagEditorFeedId: String? = null,
-        val tagEditorFeedTitle: String = "",
-        val newTagNameInput: String = "",
-        val selectedTagIds: Set<String> = emptySet(),
+        val folderEditorFeedId: String? = null,
+        val folderEditorFeedTitle: String = "",
+        val newFolderNameInput: String = "",
+        val selectedFolderId: String? = null,
+        val editingFolderId: String? = null,
+        val editingFolderName: String = "",
         val isSaving: Boolean = false,
     )
 
