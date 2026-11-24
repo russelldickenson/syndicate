@@ -1,9 +1,12 @@
 package com.zigzag.rssreader.feature.articles.presentation
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -205,9 +209,6 @@ internal fun ArticlesScreen(
                     onAction = onNavigateToFeeds,
                 )
             } else {
-                // Always open at the top of the list: a plain LazyColumn would restore the
-                // previous scroll offset when the activity (or saved back stack) is restored,
-                // which shows the most-recently-loaded articles at the bottom on startup.
                 val listState = rememberLazyListState()
                 // Always open at the top of the list: a plain LazyColumn would restore the
                 // previous scroll offset when the activity (or saved back stack) is restored,
@@ -217,23 +218,61 @@ internal fun ArticlesScreen(
                 LaunchedEffect(state.articles) {
                     if (state.articles.isNotEmpty()) listState.scrollToItem(0)
                 }
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    itemsIndexed(
-                        items = state.articles,
-                        key = { _, article -> article.id },
-                    ) { index, article ->
-                        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-                            ArticleRow(
-                                article = article,
-                                onRead = { onOpenArticles(state.articles.map { it.id }, index) },
-                            )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        itemsIndexed(
+                            items = state.articles,
+                            key = { _, article -> article.id },
+                        ) { index, article ->
+                            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                                ArticleRow(
+                                    article = article,
+                                    onRead = { onOpenArticles(state.articles.map { it.id }, index) },
+                                )
+                            }
+                        }
+                        item(key = "articles_bottom_spacer") {
+                            Spacer(modifier = Modifier.height(72.dp))
                         }
                     }
-                    item(key = "articles_bottom_spacer") {
-                        Spacer(modifier = Modifier.height(72.dp))
+
+                    // A slim scrollbar thumb shown whenever the list overflows the screen.
+                    val thumb by remember {
+                        derivedStateOf {
+                            val info = listState.layoutInfo
+                            val first = info.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf null
+                            val last = info.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf null
+                            val total = info.totalItemsCount
+                            if (total <= last.index - first.index + 1) {
+                                null
+                            } else {
+                                first.index.toFloat() / total to (last.index + 1).toFloat() / total
+                            }
+                        }
+                    }
+                    if (thumb != null) {
+                        val barColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        Canvas(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .fillMaxHeight()
+                                .width(4.dp)
+                                .padding(vertical = 8.dp),
+                        ) {
+                            val (start, end) = thumb!!
+                            drawRoundRect(
+                                color = barColor,
+                                topLeft = androidx.compose.ui.geometry.Offset(0f, start * size.height),
+                                size = androidx.compose.ui.geometry.Size(
+                                    size.width,
+                                    ((end - start).coerceAtLeast(0.03f) * size.height),
+                                ),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width / 2),
+                            )
+                        }
                     }
                 }
             }
