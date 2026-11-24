@@ -172,14 +172,14 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
  * DuckDuckGo's icon service, which covers sites that do not serve a root favicon.
  * Null when the site's host cannot be determined.
  */
-fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
+private fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
     val primary = faviconUrl(baseUrl) ?: return null
     val fallback = iconServiceUrl(baseUrl) ?: return primary to primary
     return primary to fallback
 }
 
 @Composable
-fun ArticleFavicon(
+private fun ArticleFavicon(
     primaryUrl: String?,
     fallbackUrl: String?,
     modifier: Modifier = Modifier,

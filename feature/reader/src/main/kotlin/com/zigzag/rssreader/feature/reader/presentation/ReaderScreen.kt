@@ -8,7 +8,6 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,10 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
@@ -29,8 +24,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,22 +34,19 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
-import com.zigzag.rssreader.core.ui.components.ArticleFavicon
-import com.zigzag.rssreader.core.ui.components.faviconCandidates
-import com.zigzag.rssreader.core.ui.components.formatArticleDate
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
+import com.zigzag.rssreader.core.ui.components.formatArticleDate
 import com.zigzag.rssreader.feature.reader.R
 import kotlin.math.abs
 
@@ -108,9 +98,7 @@ internal fun ReaderScreen(
 
     val openOriginal: () -> Unit = {
         if (!link.isNullOrBlank()) {
-            runCatching {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
-            }
+            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link))) }
         }
     }
 
@@ -121,9 +109,7 @@ internal fun ReaderScreen(
                 putExtra(Intent.EXTRA_SUBJECT, article?.title.orEmpty())
                 putExtra(Intent.EXTRA_TEXT, link)
             }
-            runCatching {
-                context.startActivity(Intent.createChooser(sendIntent, null))
-            }
+            runCatching { context.startActivity(Intent.createChooser(sendIntent, null)) }
         }
     }
 
@@ -138,65 +124,12 @@ internal fun ReaderScreen(
     }
 
     val dateLabel = article?.publishedAt?.let(::formatArticleDate).orEmpty()
-    val faviconBaseUrl = article?.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article?.link
-    val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        ArticleFavicon(
-                            primaryUrl = faviconUrls?.first,
-                            fallbackUrl = faviconUrls?.second,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clip(RoundedCornerShape(5.dp)),
-                        )
-                        if (faviconUrls != null) {
-                            Spacer(Modifier.width(10.dp))
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = article?.title.orEmpty().ifBlank { "Article" },
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                ),
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (article != null) {
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    text = listOfNotNull(
-                                        article.feedTitle.takeIf { it.isNotBlank() },
-                                        dateLabel.takeIf { it.isNotBlank() },
-                                    ).joinToString(" · "),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.semantics { contentDescription = "Back" },
-                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
+            BottomAppBar {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -206,92 +139,93 @@ internal fun ReaderScreen(
                         enabled = canGoPrevious,
                         modifier = Modifier.semantics { contentDescription = "Previous article" },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.feature_reader_ic_previous),
-                            contentDescription = null,
-                        )
+                        Icon(painterResource(R.drawable.feature_reader_ic_previous), null)
                     }
                     IconButton(
                         onClick = onNext,
                         enabled = canGoNext,
                         modifier = Modifier.semantics { contentDescription = "Next article" },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.feature_reader_ic_next),
-                            contentDescription = null,
-                        )
+                        Icon(painterResource(R.drawable.feature_reader_ic_next), null)
                     }
                     IconButton(
                         onClick = openOriginal,
                         enabled = !link.isNullOrBlank(),
                         modifier = Modifier.semantics { contentDescription = "View original article" },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.feature_reader_ic_open_original),
-                            contentDescription = null,
-                        )
+                        Icon(painterResource(R.drawable.feature_reader_ic_open_original), null)
                     }
                     IconButton(
                         onClick = shareArticle,
                         enabled = !link.isNullOrBlank(),
                         modifier = Modifier.semantics { contentDescription = "Share article" },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.feature_reader_ic_share),
-                            contentDescription = null,
-                        )
+                        Icon(painterResource(R.drawable.feature_reader_ic_share), null)
                     }
                 }
             }
         },
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
         ) {
-            if (article == null) {
-                LoadingIndicator(modifier = Modifier.align(Alignment.Center))
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier.semantics { contentDescription = "Back" },
+            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
+
+            if (article != null) {
+                Text(
+                    text = article.title,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (dateLabel.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = dateLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            if (isLoading && article != null) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
             if (target != null) {
                 key(target) {
-                    Box(
+                    AndroidView(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .clip(RoundedCornerShape(12.dp)),
-                    ) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxSize(),
-                            factory = { webContext ->
-                                val swipeDetector = GestureDetector(
-                                    webContext,
-                                    object : GestureDetector.SimpleOnGestureListener() {
-                                        override fun onFling(
-                                            start: MotionEvent?,
-                                            end: MotionEvent,
-                                            velocityX: Float,
-                                            velocityY: Float,
-                                        ): Boolean {
-                                            if (start == null) return false
-                                            val dx = end.x - start.x
-                                            val dy = end.y - start.y
-                                            if (abs(dx) > abs(dy) && abs(dx) > 80 && abs(velocityX) > 150) {
-                                                if (dx > 0) previousAction.value() else nextAction.value()
-                                                return true
-                                            }
-                                            return false
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        factory = { webContext ->
+                            val swipeDetector = GestureDetector(
+                                webContext,
+                                object : GestureDetector.SimpleOnGestureListener() {
+                                    override fun onFling(
+                                        start: MotionEvent?,
+                                        end: MotionEvent,
+                                        velocityX: Float,
+                                        velocityY: Float,
+                                    ): Boolean {
+                                        if (start == null) return false
+                                        val dx = end.x - start.x
+                                        val dy = end.y - start.y
+                                        if (abs(dx) > abs(dy) && abs(dx) > 80 && abs(velocityX) > 150) {
+                                            if (dx > 0) previousAction.value() else nextAction.value()
+                                            return true
                                         }
-                                    },
-                                )
+                                        return false
+                                    }
+                                },
+                            )
                             WebView(webContext).apply {
-                                setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 settings.javaScriptEnabled = false
                                 settings.domStorageEnabled = false
                                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
@@ -311,7 +245,7 @@ internal fun ReaderScreen(
                                 if (!html.isNullOrBlank()) {
                                     webView.loadDataWithBaseURL(
                                         link,
-                                        prepareArticleHtml(html.orEmpty()),
+                                        prepareArticleHtml(html.orEmpty(), dark = dark),
                                         "text/html",
                                         "UTF-8",
                                         null,
@@ -324,15 +258,8 @@ internal fun ReaderScreen(
                         },
                     )
                 }
-            }
-        }
-
-            if (isLoading && article != null) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter),
-                )
+            } else if (article == null) {
+                LoadingIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
         }
     }
