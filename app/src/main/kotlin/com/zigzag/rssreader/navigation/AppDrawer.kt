@@ -24,6 +24,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zigzag.rssreader.core.ui.components.AppIcon
+import com.zigzag.rssreader.core.ui.components.FaviconImage
+import com.zigzag.rssreader.core.ui.components.faviconCandidates
 import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.UnreadBadge
 
@@ -88,9 +91,13 @@ fun AppDrawer(
                 )
             }
             items(items = state.feeds, key = { "feed_${it.id}" }) { feed ->
+                val candidates = remember(feed.siteUrl, feed.url) {
+                    faviconCandidates(feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url)
+                }
                 DrawerRow(
                     label = feed.title,
                     icon = Icons.Filled.Article,
+                    favicon = candidates,
                     badge = state.unreadCounts.perFeed[feed.id] ?: 0,
                     selected = (currentDestination as? AppDestination.FeedArticles)?.feedId == feed.id,
                     onClick = { onNavigate(AppDestination.FeedArticles(feed.id, feed.title)) },
@@ -147,6 +154,7 @@ private fun DrawerRow(
     selected: Boolean,
     onClick: () -> Unit,
     badge: Int = 0,
+    favicon: Pair<String, String>? = null,
 ) {
     Surface(
         modifier = Modifier
@@ -164,12 +172,27 @@ private fun DrawerRow(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.width(24.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (favicon != null) {
+                FaviconImage(
+                    primaryUrl = favicon.first,
+                    fallbackUrl = favicon.second,
+                    fallback = {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    modifier = Modifier.width(24.dp),
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.width(24.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Spacer(Modifier.width(12.dp))
             Text(
                 text = label,

@@ -1,6 +1,7 @@
 package com.zigzag.rssreader.core.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -172,10 +173,52 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
  * DuckDuckGo's icon service, which covers sites that do not serve a root favicon.
  * Null when the site's host cannot be determined.
  */
-private fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
+fun faviconCandidates(baseUrl: String?): Pair<String, String>? {
     val primary = faviconUrl(baseUrl) ?: return null
     val fallback = iconServiceUrl(baseUrl) ?: return primary to primary
     return primary to fallback
+}
+
+/**
+ * Loads a site's favicon, falling back to [fallback] if no favicon URL can be
+ * built or neither the direct favicon nor the icon service loads.
+ */
+@Composable
+fun FaviconImage(
+    primaryUrl: String?,
+    fallbackUrl: String?,
+    fallback: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val start = primaryUrl
+    if (start == null) {
+        Box(modifier) { fallback() }
+        return
+    }
+    var url by remember(start) { mutableStateOf(start) }
+    var usedFallback by remember(start) { mutableStateOf(false) }
+    var failed by remember(start) { mutableStateOf(false) }
+    if (failed) {
+        Box(modifier) { fallback() }
+        return
+    }
+    AsyncImage(
+        model = url,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = ContentScale.Crop,
+        onState = { state ->
+            if (state is AsyncImagePainter.State.Error) {
+                when {
+                    !usedFallback && fallbackUrl != null && fallbackUrl != start -> {
+                        usedFallback = true
+                        url = fallbackUrl
+                    }
+                    else -> failed = true
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -184,20 +227,11 @@ private fun ArticleFavicon(
     fallbackUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    val start = primaryUrl ?: return
-    var url by remember(start) { mutableStateOf(start) }
-    var usedFallback by remember(start) { mutableStateOf(false) }
-    AsyncImage(
-        model = url,
-        contentDescription = null,
+    FaviconImage(
+        primaryUrl = primaryUrl,
+        fallbackUrl = fallbackUrl,
+        fallback = {},
         modifier = modifier,
-        contentScale = ContentScale.Crop,
-        onState = { state ->
-            if (state is AsyncImagePainter.State.Error && !usedFallback && fallbackUrl != null && fallbackUrl != start) {
-                usedFallback = true
-                url = fallbackUrl
-            }
-        },
     )
 }
 
