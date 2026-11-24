@@ -3,7 +3,9 @@ package com.zigzag.rssreader.feature.reader.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zigzag.rssreader.core.domain.model.Article
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.repository.ArticleRepository
+import com.zigzag.rssreader.core.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +21,17 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val articleRepository: ArticleRepository,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
+
+    val articleFont: StateFlow<ArticleFont> =
+        settingsRepository.observeSettings()
+            .map { it.articleFont }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                initialValue = ArticleFont.SANS_SERIF,
+            )
 
     private val articleIds = MutableStateFlow<List<String>>(emptyList())
     private val _index = MutableStateFlow(0)

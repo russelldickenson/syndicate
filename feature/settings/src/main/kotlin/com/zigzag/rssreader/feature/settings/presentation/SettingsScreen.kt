@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.TagSort
@@ -55,7 +56,7 @@ internal fun SettingsScreen(
     onOpenDrawer: () -> Unit,
 ) {
     var sortSheet by remember { mutableStateOf<SortKind?>(null) }
-
+    var showFontSheet by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -97,6 +98,15 @@ internal fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            item(key = "reading_header") { SectionHeader("Reading") }
+            item(key = "article_font") {
+                PreferenceRow(
+                    label = "Font",
+                    value = settings.articleFont.label,
+                    onClick = { showFontSheet = true },
+                )
             }
 
             item(key = "sync_header") { SectionHeader("Sync") }
@@ -177,6 +187,20 @@ internal fun SettingsScreen(
             onDismiss = { sortSheet = null },
         )
         null -> Unit
+    }
+
+    if (showFontSheet) {
+        SortSheet(
+            title = "Article font",
+            options = ArticleFont.entries,
+            selected = settings.articleFont,
+            onSelect = { font ->
+                viewModel.setArticleFont(font)
+                showFontSheet = false
+            },
+            label = { it.label },
+            onDismiss = { showFontSheet = false },
+        )
     }
 }
 

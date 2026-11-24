@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.TagSort
@@ -48,6 +49,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
         dataStore.edit { preferences ->
             preferences[SettingsKeys.THEME_MODE] = updated.themeMode.ordinal
+            preferences[SettingsKeys.ARTICLE_FONT] = updated.articleFont.name
             preferences[SettingsKeys.REFRESH_ON_STARTUP] = updated.refreshOnStartup
             preferences[SettingsKeys.ARTICLE_SORT] = updated.articleSort.name
             preferences[SettingsKeys.FEED_SORT] = updated.feedSort.name
@@ -61,6 +63,10 @@ class SettingsRepositoryImpl @Inject constructor(
         val themeMode = this[SettingsKeys.THEME_MODE]
             ?.let { ordinal -> ThemeMode.entries.getOrNull(ordinal) }
             ?: defaults.themeMode
+
+        val articleFont = this[SettingsKeys.ARTICLE_FONT]
+            ?.let { name -> ArticleFont.entries.firstOrNull { it.name == name } }
+            ?: defaults.articleFont
 
         val articleSort = this[SettingsKeys.ARTICLE_SORT]
             ?.let { name -> ArticleSort.entries.firstOrNull { it.name == name } }
@@ -76,6 +82,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
         return UserSettings(
             themeMode = themeMode,
+            articleFont = articleFont,
             refreshOnStartup = this[SettingsKeys.REFRESH_ON_STARTUP] ?: defaults.refreshOnStartup,
             articleSort = articleSort,
             feedSort = feedSort,

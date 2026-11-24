@@ -2,6 +2,7 @@ package com.zigzag.rssreader.feature.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleSort
 import com.zigzag.rssreader.core.domain.model.FeedSort
 import com.zigzag.rssreader.core.domain.model.TagSort
@@ -32,6 +33,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setThemeMode(themeMode: ThemeMode) {
         update { it.copy(themeMode = themeMode) }
+    }
+
+    fun setArticleFont(font: ArticleFont) {
+        update { it.copy(articleFont = font) }
     }
 
     fun setRefreshOnStartup(enabled: Boolean) {

@@ -1,5 +1,6 @@
 package com.zigzag.rssreader.feature.reader.presentation
 
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -20,6 +21,25 @@ class ArticleHtmlTest {
     fun usesThemeAwareTextColors() {
         assertTrue(prepareArticleHtml("x", dark = false).contains("color: #1A1C23;"))
         assertTrue(prepareArticleHtml("x", dark = true).contains("color: #E3E1EC;"))
+    }
+
+    @Test
+    fun usesSystemFontFamilies() {
+        assertTrue(prepareArticleHtml("x", font = ArticleFont.SANS_SERIF).contains("font-family: sans-serif;"))
+        assertTrue(prepareArticleHtml("x", font = ArticleFont.SERIF).contains("font-family: serif;"))
+    }
+
+    @Test
+    fun embedsCustomFontsAsDataUris() {
+        val prepared = prepareArticleHtml(
+            "x",
+            font = ArticleFont.INTER,
+            embeddedFont = "QUJD",
+        )
+
+        assertTrue(prepared.contains("@font-face"))
+        assertTrue(prepared.contains("url(data:font/ttf;base64,QUJD)"))
+        assertTrue(prepared.contains("font-family: 'ArticleFont', sans-serif;"))
     }
 
     @Test

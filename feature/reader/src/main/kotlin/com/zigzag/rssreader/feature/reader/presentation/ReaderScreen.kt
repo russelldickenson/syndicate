@@ -39,6 +39,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import android.util.Base64
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +50,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
+import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
 import com.zigzag.rssreader.core.ui.components.formatArticleDate
 import com.zigzag.rssreader.feature.reader.R
@@ -65,11 +70,13 @@ fun ReaderRoute(
     val link by viewModel.link.collectAsStateWithLifecycle()
     val hasPrevious by viewModel.hasPrevious.collectAsStateWithLifecycle()
     val hasNext by viewModel.hasNext.collectAsStateWithLifecycle()
+    val articleFont by viewModel.articleFont.collectAsStateWithLifecycle()
 
     ReaderScreen(
         article = article,
         html = html,
         link = link,
+        articleFont = articleFont,
         canGoPrevious = hasPrevious,
         canGoNext = hasNext,
         onPrevious = viewModel::previous,
@@ -83,6 +90,7 @@ internal fun ReaderScreen(
     article: Article?,
     html: String?,
     link: String?,
+    articleFont: ArticleFont,
     canGoPrevious: Boolean,
     canGoNext: Boolean,
     onPrevious: () -> Unit,
@@ -126,6 +134,29 @@ internal fun ReaderScreen(
 
     val dateLabel = article?.publishedAt?.let(::formatArticleDate).orEmpty()
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    // Custom fonts are inlined into the HTML as a Base64 data URI so the WebView
+    // can render them even though the article is loaded from a feed URL.
+    val fontRes = when (articleFont) {
+        ArticleFont.INTER -> R.raw.font_inter
+        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF -> R.raw.font_atkinson
+        else -> null
+    }
+    val embeddedFont = remember(fontRes) {
+        fontRes?.let {
+            Base64.encodeToString(
+                context.resources.openRawResource(it).use { stream -> stream.readBytes() },
+                Base64.NO_WRAP,
+            )
+        }
+    }
+    val atkinson = FontFamily(Font(R.raw.font_atkinson, FontWeight.Normal, FontStyle.Normal))
+    val titleFontFamily = when (articleFont) {
+        ArticleFont.SERIF -> FontFamily.Serif
+        ArticleFont.INTER -> FontFamily(Font(R.raw.font_inter, FontWeight.Normal, FontStyle.Normal))
+        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF -> atkinson
+        ArticleFont.SANS_SERIF -> FontFamily.SansSerif
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -184,7 +215,10 @@ internal fun ReaderScreen(
             if (article != null) {
                 Text(
                     text = article.title,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = titleFontFamily,
+                    ),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -193,7 +227,7 @@ internal fun ReaderScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = dateLabel,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = titleFontFamily),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -205,7 +239,7 @@ internal fun ReaderScreen(
             }
 
             if (target != null) {
-                key(target) {
+                key(target, articleFont) {
                     AndroidView(
                         modifier = Modifier
                             .weight(1f)
@@ -247,12 +281,18 @@ internal fun ReaderScreen(
                             }
                         },
                         update = { webView ->
-                            if (lastLoaded != target) {
+                            val loadKey = "$target|$articleFont|$dark"
+                            if (lastLoaded != loadKey) {
                                 isLoading = true
                                 if (!html.isNullOrBlank()) {
                                     webView.loadDataWithBaseURL(
                                         link,
-                                        prepareArticleHtml(html.orEmpty(), dark = dark),
+                                        prepareArticleHtml(
+                                            html.orEmpty(),
+                                            dark = dark,
+                                            font = articleFont,
+                                            embeddedFont = embeddedFont,
+                                        ),
                                         "text/html",
                                         "UTF-8",
                                         null,
@@ -260,7 +300,7 @@ internal fun ReaderScreen(
                                 } else if (!link.isNullOrBlank()) {
                                     webView.loadUrl(link.orEmpty())
                                 }
-                                lastLoaded = target
+                                lastLoaded = loadKey
                             }
                         },
                     )
