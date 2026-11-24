@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zigzag.rssreader.core.domain.model.Feed
 import com.zigzag.rssreader.core.ui.components.AppIcon
 import com.zigzag.rssreader.core.ui.components.FaviconImage
 import com.zigzag.rssreader.core.ui.components.faviconCandidates
@@ -70,17 +71,6 @@ fun AppDrawer(
                     )
                 }
             }
-            item(key = "feeds_header") {
-                SectionHeader("Feeds")
-            }
-            item(key = "all") {
-                DrawerRow(
-                    label = "All",
-                    icon = Icons.Filled.Menu,
-                    selected = currentDestination == AppDestination.ArticlesAll,
-                    onClick = { onNavigate(AppDestination.ArticlesAll) },
-                )
-            }
             item(key = "unread") {
                 DrawerRow(
                     label = "Unread",
@@ -90,26 +80,28 @@ fun AppDrawer(
                     onClick = { onNavigate(AppDestination.ArticlesUnread) },
                 )
             }
-            items(items = state.feeds, key = { "feed_${it.id}" }) { feed ->
-                val candidates = remember(feed.siteUrl, feed.url) {
-                    faviconCandidates(feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url)
-                }
+            item(key = "all") {
                 DrawerRow(
-                    label = feed.title,
-                    icon = Icons.Filled.Article,
-                    favicon = candidates,
-                    badge = state.unreadCounts.perFeed[feed.id] ?: 0,
-                    selected = (currentDestination as? AppDestination.FeedArticles)?.feedId == feed.id,
-                    onClick = { onNavigate(AppDestination.FeedArticles(feed.id, feed.title)) },
+                    label = "All",
+                    icon = Icons.Filled.Menu,
+                    selected = currentDestination == AppDestination.ArticlesAll,
+                    onClick = { onNavigate(AppDestination.ArticlesAll) },
                 )
             }
-            item(key = "manage_feeds") {
-                DrawerRow(
-                    label = "Manage feeds",
-                    icon = Icons.Filled.Flag,
-                    selected = currentDestination == AppDestination.Feeds,
-                    onClick = { onNavigate(AppDestination.Feeds) },
-                )
+
+            val standaloneFeeds = state.feeds.filter { it.folderId == null }
+            if (standaloneFeeds.isNotEmpty()) {
+                item(key = "feeds_header") {
+                    SectionHeader("Feeds")
+                }
+                items(items = standaloneFeeds, key = { "feed_${it.id}" }) { feed ->
+                    FeedDrawerRow(
+                        feed = feed,
+                        state = state,
+                        currentDestination = currentDestination,
+                        onNavigate = onNavigate,
+                    )
+                }
             }
 
             if (state.folders.isNotEmpty()) {
@@ -124,7 +116,25 @@ fun AppDrawer(
                         selected = (currentDestination as? AppDestination.FolderArticles)?.folderId == folder.id,
                         onClick = { onNavigate(AppDestination.FolderArticles(folder.id, folder.name)) },
                     )
+                    state.feeds.filter { it.folderId == folder.id }.forEach { feed ->
+                        FeedDrawerRow(
+                            feed = feed,
+                            state = state,
+                            currentDestination = currentDestination,
+                            onNavigate = onNavigate,
+                            startPadding = 32.dp,
+                        )
+                    }
                 }
+            }
+
+            item(key = "manage_feeds") {
+                DrawerRow(
+                    label = "Manage feeds",
+                    icon = Icons.Filled.Flag,
+                    selected = currentDestination == AppDestination.Feeds,
+                    onClick = { onNavigate(AppDestination.Feeds) },
+                )
             }
 
             item(key = "settings_divider") {
@@ -148,6 +158,28 @@ fun AppDrawer(
 }
 
 @Composable
+private fun FeedDrawerRow(
+    feed: Feed,
+    state: DrawerViewModelState,
+    currentDestination: AppDestination?,
+    onNavigate: (AppDestination) -> Unit,
+    startPadding: androidx.compose.ui.unit.Dp = 16.dp,
+) {
+    val candidates = remember(feed.siteUrl, feed.url) {
+        faviconCandidates(feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url)
+    }
+    DrawerRow(
+        label = feed.title,
+        icon = Icons.Filled.Article,
+        favicon = candidates,
+        badge = state.unreadCounts.perFeed[feed.id] ?: 0,
+        selected = (currentDestination as? AppDestination.FeedArticles)?.feedId == feed.id,
+        onClick = { onNavigate(AppDestination.FeedArticles(feed.id, feed.title)) },
+        startPadding = startPadding,
+    )
+}
+
+@Composable
 private fun DrawerRow(
     label: String,
     icon: ImageVector,
@@ -155,6 +187,7 @@ private fun DrawerRow(
     onClick: () -> Unit,
     badge: Int = 0,
     favicon: Pair<String, String>? = null,
+    startPadding: androidx.compose.ui.unit.Dp = 16.dp,
 ) {
     Surface(
         modifier = Modifier
@@ -169,7 +202,8 @@ private fun DrawerRow(
         shape = MaterialTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            // Indent only the leading content; the badge stays flush with the panel's right edge.
+            modifier = Modifier.padding(start = startPadding, top = 12.dp, end = 16.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (favicon != null) {
