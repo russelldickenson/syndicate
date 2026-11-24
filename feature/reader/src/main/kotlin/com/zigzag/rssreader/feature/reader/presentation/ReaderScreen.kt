@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -129,7 +130,10 @@ internal fun ReaderScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            BottomAppBar {
+            BottomAppBar(
+                modifier = Modifier.height(56.dp),
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -182,12 +186,14 @@ internal fun ReaderScreen(
                     text = article.title,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (dateLabel.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = dateLabel,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -226,6 +232,7 @@ internal fun ReaderScreen(
                                 },
                             )
                             WebView(webContext).apply {
+                                setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 settings.javaScriptEnabled = false
                                 settings.domStorageEnabled = false
                                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
