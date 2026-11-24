@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -255,29 +256,40 @@ internal fun ReaderScreen(
 
             if (target != null) {
                 key(target) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = { webContext ->
-                            val swipeDetector = GestureDetector(
-                                webContext,
-                                object : GestureDetector.SimpleOnGestureListener() {
-                                    override fun onFling(
-                                        start: MotionEvent?,
-                                        end: MotionEvent,
-                                        velocityX: Float,
-                                        velocityY: Float,
-                                    ): Boolean {
-                                        if (start == null) return false
-                                        val dx = end.x - start.x
-                                        val dy = end.y - start.y
-                                        if (abs(dx) > abs(dy) && abs(dx) > 80 && abs(velocityX) > 150) {
-                                            if (dx > 0) previousAction.value() else nextAction.value()
-                                            return true
-                                        }
-                                        return false
-                                    }
-                                },
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                shape = RoundedCornerShape(12.dp),
                             )
+                            .clip(RoundedCornerShape(12.dp)),
+                    ) {
+                        AndroidView(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = { webContext ->
+                                val swipeDetector = GestureDetector(
+                                    webContext,
+                                    object : GestureDetector.SimpleOnGestureListener() {
+                                        override fun onFling(
+                                            start: MotionEvent?,
+                                            end: MotionEvent,
+                                            velocityX: Float,
+                                            velocityY: Float,
+                                        ): Boolean {
+                                            if (start == null) return false
+                                            val dx = end.x - start.x
+                                            val dy = end.y - start.y
+                                            if (abs(dx) > abs(dy) && abs(dx) > 80 && abs(velocityX) > 150) {
+                                                if (dx > 0) previousAction.value() else nextAction.value()
+                                                return true
+                                            }
+                                            return false
+                                        }
+                                    },
+                                )
                             WebView(webContext).apply {
                                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 settings.javaScriptEnabled = false
@@ -313,6 +325,7 @@ internal fun ReaderScreen(
                     )
                 }
             }
+        }
 
             if (isLoading && article != null) {
                 LinearProgressIndicator(
