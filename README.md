@@ -1,4 +1,4 @@
-# RSS Reader
+# Syndicate
 
 A native Android RSS reader built with Kotlin, Jetpack Compose, Material 3, Room 3, Hilt and Navigation 3.
 

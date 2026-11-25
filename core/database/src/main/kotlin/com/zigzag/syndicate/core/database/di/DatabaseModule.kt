@@ -1,0 +1,33 @@
+package com.zigzag.syndicate.core.database.di
+
+import android.content.Context
+import androidx.room3.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.zigzag.syndicate.core.database.RssDatabase
+import com.zigzag.syndicate.core.database.dao.ArticleDao
+import com.zigzag.syndicate.core.database.dao.FeedDao
+import com.zigzag.syndicate.core.database.migrations.MIGRATION_1_2
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): RssDatabase =
+        Room.databaseBuilder(context, RssDatabase::class.java, "syndicate.db")
+            .setDriver(BundledSQLiteDriver())
+            .addMigrations(MIGRATION_1_2)
+            .build()
+
+    @Provides
+    fun provideFeedDao(database: RssDatabase): FeedDao = database.feedDao()
+
+    @Provides
+    fun provideArticleDao(database: RssDatabase): ArticleDao = database.articleDao()
+}

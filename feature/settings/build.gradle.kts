@@ -5,5 +5,9 @@ plugins {
 }
 
 android {
-    namespace = "com.zigzag.rssreader.feature.settings"
+    namespace = "com.zigzag.syndicate.feature.settings"
+}
+
+dependencies {
+    implementation(libs.findLibrary("androidx-activity-compose").get())
 }

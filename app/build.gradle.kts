@@ -7,9 +7,9 @@ plugins {
 }
 
 android {
-    namespace = "com.zigzag.rssreader"
+    namespace = "com.zigzag.syndicate"
     defaultConfig {
-        applicationId = "com.zigzag.rssreader"
+        applicationId = "com.zigzag.syndicate"
         versionCode = 1
         versionName = "1.0.0"
     }

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.zigzag.rssreader.core.datastore"
+    namespace = "com.zigzag.syndicate.core.datastore"
 }
 
 dependencies {

@@ -2,7 +2,7 @@
 # ProGuard / R8 Rules Template
 # ==============================================================================
 # Source of truth for all keep rules. Copy to app/proguard-rules.pro and
-# adjust com.zigzag.rssreader.* package names to match your project.
+# adjust com.zigzag.syndicate.* package names to match your project.
 #
 # Most AndroidX and Jetpack libraries ship their own consumer rules inside
 # the AAR/JAR - only add manual rules when the library docs say so, or when
@@ -66,8 +66,8 @@
 -keep class <1>$$serializer { *; }
 
 # Keep project data/domain models used with serialization
--keep class com.zigzag.rssreader.core.domain.model.** { *; }
--keepclassmembers class com.zigzag.rssreader.core.domain.model.** {
+-keep class com.zigzag.syndicate.core.domain.model.** { *; }
+-keepclassmembers class com.zigzag.syndicate.core.domain.model.** {
     <fields>;
 }
 
@@ -149,7 +149,7 @@
 -dontwarn dagger.hilt.internal.**
 
 # Keep project-level DI setup (adjust package)
--keep class com.zigzag.rssreader.di.** { *; }
+-keep class com.zigzag.syndicate.di.** { *; }
 
 
 # ==============================================================================
@@ -235,8 +235,8 @@
 # Keep crypto and security classes that use reflection or JCA providers.
 # Adjust package names to match your project.
 
--keep class com.zigzag.rssreader.core.data.crypto.** { *; }
--keep class com.zigzag.rssreader.core.data.security.** { *; }
+-keep class com.zigzag.syndicate.core.data.crypto.** { *; }
+-keep class com.zigzag.syndicate.core.data.security.** { *; }
 
 
 # ==============================================================================

@@ -27,7 +27,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "android-rss-reeder"
+rootProject.name = "android-syndicate"
 
 include(":app")
 
