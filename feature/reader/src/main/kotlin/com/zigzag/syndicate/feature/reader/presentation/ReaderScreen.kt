@@ -157,8 +157,8 @@ internal fun ReaderScreen(
     // Custom fonts are inlined into the HTML as a Base64 data URI so the WebView
     // can render them even though the article is loaded from a feed URL.
     val fontRes = when (articleFont) {
-        ArticleFont.INTER -> com.zigzag.syndicate.core.ui.R.raw.font_inter
-        ArticleFont.ATKINSON -> com.zigzag.syndicate.core.ui.R.raw.font_atkinson
+        ArticleFont.INTER -> com.zigzag.syndicate.core.ui.R.raw.core_ui_font_inter
+        ArticleFont.ATKINSON -> com.zigzag.syndicate.core.ui.R.raw.core_ui_font_atkinson
         else -> null
     }
     val embeddedFont = remember(fontRes) {

@@ -13,6 +13,21 @@ android {
         versionCode = 1
         versionName = "1.0.0"
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("SYNDICATE_KEYSTORE_FILE") ?: "release.keystore")
+            storePassword = System.getenv("SYNDICATE_STORE_PASSWORD") ?: "CHANGE_ME"
+            keyAlias = System.getenv("SYNDICATE_KEY_ALIAS") ?: "CHANGE_ME"
+            keyPassword = System.getenv("SYNDICATE_KEY_PASSWORD") ?: "CHANGE_ME"
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
 }
 
 dependencies {

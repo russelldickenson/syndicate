@@ -15,7 +15,7 @@ import com.zigzag.syndicate.core.ui.R
 @Composable
 fun AppIcon(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(R.drawable.app_icon),
+        painter = painterResource(R.drawable.core_ui_app_icon),
         contentDescription = "Syndicate",
         modifier = modifier
             .size(24.dp)

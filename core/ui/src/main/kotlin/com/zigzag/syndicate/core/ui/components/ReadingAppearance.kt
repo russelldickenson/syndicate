@@ -29,9 +29,9 @@ fun articleFontFamily(font: ArticleFont): FontFamily =
     when (font) {
         ArticleFont.SANS_SERIF -> FontFamily.SansSerif
         ArticleFont.SERIF -> FontFamily.Serif
-        ArticleFont.INTER -> FontFamily(Font(R.raw.font_inter, FontWeight.Normal, FontStyle.Normal))
+        ArticleFont.INTER -> FontFamily(Font(R.raw.core_ui_font_inter, FontWeight.Normal, FontStyle.Normal))
         ArticleFont.ATKINSON ->
-            FontFamily(Font(R.raw.font_atkinson, FontWeight.Normal, FontStyle.Normal))
+            FontFamily(Font(R.raw.core_ui_font_atkinson, FontWeight.Normal, FontStyle.Normal))
     }
 
 fun articleFontSizeSp(size: ArticleFontSize): TextUnit =
