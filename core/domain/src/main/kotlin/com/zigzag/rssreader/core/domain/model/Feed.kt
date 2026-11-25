@@ -97,8 +97,7 @@ enum class ArticleFont(val label: String) {
     SANS_SERIF("Sans Serif (System)"),
     SERIF("Serif (System)"),
     INTER("Google Inter"),
-    ATKINSON_SANS("Atkinson Hyperlegible Next (Sans serif)"),
-    ATKINSON_SERIF("Atkinson Hyperlegible Next (Serif)")
+    ATKINSON("Atkinson Hyperlegible Next"),
 }
 
 enum class ArticleFontSize(val label: String) {

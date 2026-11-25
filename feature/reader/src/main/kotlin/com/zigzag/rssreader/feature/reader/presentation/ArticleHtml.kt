@@ -35,8 +35,7 @@ internal fun prepareArticleHtml(
     val fontFamily = when (font) {
         ArticleFont.SANS_SERIF -> "sans-serif"
         ArticleFont.SERIF -> "serif"
-        ArticleFont.INTER, ArticleFont.ATKINSON_SANS -> "'ArticleFont', sans-serif"
-        ArticleFont.ATKINSON_SERIF -> "'ArticleFont', serif"
+        ArticleFont.INTER, ArticleFont.ATKINSON -> "'ArticleFont', sans-serif"
     }
     val fontSizePx = when (fontSize) {
         ArticleFontSize.SMALL -> 14

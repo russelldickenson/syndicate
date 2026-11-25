@@ -7,8 +7,8 @@ import android.view.MotionEvent
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,11 +23,10 @@ import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zigzag.rssreader.core.domain.model.Article
 import com.zigzag.rssreader.core.domain.model.ArticleFont
 import com.zigzag.rssreader.core.domain.model.ArticleFontSize
+import com.zigzag.rssreader.core.ui.components.ArticleFontChipSelector
 import com.zigzag.rssreader.core.ui.components.ArticleFontPreview
 import com.zigzag.rssreader.core.ui.components.ArticleFontSizeSelector
 import com.zigzag.rssreader.core.ui.components.LoadingIndicator
@@ -158,8 +158,7 @@ internal fun ReaderScreen(
     // can render them even though the article is loaded from a feed URL.
     val fontRes = when (articleFont) {
         ArticleFont.INTER -> com.zigzag.rssreader.core.ui.R.raw.font_inter
-        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF ->
-            com.zigzag.rssreader.core.ui.R.raw.font_atkinson
+        ArticleFont.ATKINSON -> com.zigzag.rssreader.core.ui.R.raw.font_atkinson
         else -> null
     }
     val embeddedFont = remember(fontRes) {
@@ -371,18 +370,7 @@ private fun ReadingAppearanceSheet(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
             SectionHeader("Font")
-            ArticleFont.entries.forEach { option ->
-                ListItem(
-                    headlineContent = { Text(option.label) },
-                    leadingContent = {
-                        RadioButton(
-                            selected = font == option,
-                            onClick = { onFontChange(option) },
-                        )
-                    },
-                    modifier = Modifier.clickable { onFontChange(option) },
-                )
-            }
+            ArticleFontChipSelector(selected = font, onSelect = onFontChange)
             SectionHeader("Text size")
             ArticleFontSizeSelector(selected = fontSize, onSelect = onFontSizeChange)
             ArticleFontPreview(font = font, size = fontSize)

@@ -1,7 +1,10 @@
 package com.zigzag.rssreader.core.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -27,7 +30,7 @@ fun articleFontFamily(font: ArticleFont): FontFamily =
         ArticleFont.SANS_SERIF -> FontFamily.SansSerif
         ArticleFont.SERIF -> FontFamily.Serif
         ArticleFont.INTER -> FontFamily(Font(R.raw.font_inter, FontWeight.Normal, FontStyle.Normal))
-        ArticleFont.ATKINSON_SANS, ArticleFont.ATKINSON_SERIF ->
+        ArticleFont.ATKINSON ->
             FontFamily(Font(R.raw.font_atkinson, FontWeight.Normal, FontStyle.Normal))
     }
 
@@ -56,6 +59,33 @@ fun ArticleFontSizeSelector(
                     count = ArticleFontSize.entries.size,
                 ),
             ) { Text(option.label) }
+        }
+    }
+}
+
+private fun ArticleFont.shortLabel(): String = when (this) {
+    ArticleFont.SANS_SERIF -> "System Sans"
+    ArticleFont.SERIF -> "System Serif"
+    ArticleFont.INTER -> "Inter"
+    ArticleFont.ATKINSON -> "Atkinson"
+}
+
+@Composable
+fun ArticleFontChipSelector(
+    selected: ArticleFont,
+    onSelect: (ArticleFont) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ArticleFont.entries.forEach { option ->
+            FilterChip(
+                selected = selected == option,
+                onClick = { onSelect(option) },
+                label = { Text(option.shortLabel()) },
+            )
         }
     }
 }

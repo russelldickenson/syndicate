@@ -35,6 +35,7 @@ import com.zigzag.rssreader.core.domain.model.FolderSort
 import com.zigzag.rssreader.core.domain.model.ThemeMode
 import com.zigzag.rssreader.core.domain.model.UserSettings
 import com.zigzag.rssreader.core.ui.components.ArticleFontPreview
+import com.zigzag.rssreader.core.ui.components.ArticleFontChipSelector
 import com.zigzag.rssreader.core.ui.components.ArticleFontSizeSelector
 import com.zigzag.rssreader.core.ui.components.SectionHeader
 import com.zigzag.rssreader.core.ui.components.SortSheet
@@ -58,7 +59,6 @@ internal fun SettingsScreen(
     onOpenDrawer: () -> Unit,
 ) {
     var sortSheet by remember { mutableStateOf<SortKind?>(null) }
-    var showFontSheet by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,11 +103,11 @@ internal fun SettingsScreen(
             }
 
             item(key = "reading_header") { SectionHeader("Reading") }
-            item(key = "article_font") {
-                PreferenceRow(
-                    label = "Font",
-                    value = settings.articleFont.label,
-                    onClick = { showFontSheet = true },
+            item(key = "article_font") { SectionHeader("Font") }
+            item(key = "article_font_selector") {
+                ArticleFontChipSelector(
+                    selected = settings.articleFont,
+                    onSelect = viewModel::setArticleFont,
                 )
             }
             item(key = "article_font_size") { SectionHeader("Text size") }
@@ -202,20 +202,6 @@ internal fun SettingsScreen(
             onDismiss = { sortSheet = null },
         )
         null -> Unit
-    }
-
-    if (showFontSheet) {
-        SortSheet(
-            title = "Article font",
-            options = ArticleFont.entries,
-            selected = settings.articleFont,
-            onSelect = { font ->
-                viewModel.setArticleFont(font)
-                showFontSheet = false
-            },
-            label = { it.label },
-            onDismiss = { showFontSheet = false },
-        )
     }
 }
 

@@ -66,9 +66,12 @@ class SettingsRepositoryImpl @Inject constructor(
             ?.let { ordinal -> ThemeMode.entries.getOrNull(ordinal) }
             ?: defaults.themeMode
 
-        val articleFont = this[SettingsKeys.ARTICLE_FONT]
-            ?.let { name -> ArticleFont.entries.firstOrNull { it.name == name } }
-            ?: defaults.articleFont
+        val articleFont = when (this[SettingsKeys.ARTICLE_FONT]) {
+            "ATKINSON_SANS", "ATKINSON_SERIF" -> ArticleFont.ATKINSON
+            else -> this[SettingsKeys.ARTICLE_FONT]
+                ?.let { name -> ArticleFont.entries.firstOrNull { it.name == name } }
+                ?: defaults.articleFont
+        }
 
         val articleSort = this[SettingsKeys.ARTICLE_SORT]
             ?.let { name -> ArticleSort.entries.firstOrNull { it.name == name } }
