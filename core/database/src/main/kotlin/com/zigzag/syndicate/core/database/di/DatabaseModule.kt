@@ -7,6 +7,7 @@ import com.zigzag.syndicate.core.database.RssDatabase
 import com.zigzag.syndicate.core.database.dao.ArticleDao
 import com.zigzag.syndicate.core.database.dao.FeedDao
 import com.zigzag.syndicate.core.database.migrations.MIGRATION_1_2
+import com.zigzag.syndicate.core.database.migrations.MIGRATION_2_3
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +23,7 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): RssDatabase =
         Room.databaseBuilder(context, RssDatabase::class.java, "syndicate.db")
             .setDriver(BundledSQLiteDriver())
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides

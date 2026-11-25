@@ -65,6 +65,7 @@ internal fun ArticleEntity.toDomain(
     publishedAt = publishedAt?.let { Instant.fromEpochMilliseconds(it) },
     fetchedAt = Instant.fromEpochMilliseconds(fetchedAt),
     isRead = isRead,
+    isFavourite = isFavourite,
 )
 
 internal fun ParsedArticle.toEntity(
@@ -81,4 +82,5 @@ internal fun ParsedArticle.toEntity(
     publishedAt = publishedAt?.toEpochMilliseconds(),
     fetchedAt = fetchedAt,
     isRead = false,
+    isFavourite = false,
 )

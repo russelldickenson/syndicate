@@ -119,6 +119,14 @@ class ReaderViewModel @Inject constructor(
         markCurrentRead()
     }
 
+    fun toggleFavourite() {
+        val id = currentArticleId.value ?: return
+        val isFavourite = article.value?.isFavourite ?: false
+        viewModelScope.launch {
+            runCatching { articleRepository.setFavourite(id, !isFavourite) }
+        }
+    }
+
     fun previous() = moveTo(_index.value - 1)
 
     fun next() = moveTo(_index.value + 1)

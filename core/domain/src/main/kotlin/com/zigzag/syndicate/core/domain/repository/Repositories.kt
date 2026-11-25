@@ -41,6 +41,7 @@ interface ArticleRepository {
     suspend fun markRead(articleId: String)
     suspend fun markUnread(articleId: String)
     suspend fun markAllRead(scope: ArticleScope)
+    suspend fun setFavourite(articleId: String, isFavourite: Boolean)
 }
 
 interface SettingsRepository {

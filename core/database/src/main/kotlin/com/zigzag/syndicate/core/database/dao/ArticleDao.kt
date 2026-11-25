@@ -18,6 +18,7 @@ interface ArticleDao {
             (
                 :scopeKind = 'ALL'
                 OR (:scopeKind = 'UNREAD' AND a.isRead = 0)
+                OR (:scopeKind = 'FAVOURITES' AND a.isFavourite = 1)
                 OR (:scopeKind = 'FEED' AND a.feedId = :scopeId)
                 OR (:scopeKind = 'FOLDER' AND a.feedId IN (
                     SELECT f.id FROM feeds f WHERE f.folderId = :scopeId
@@ -45,12 +46,16 @@ interface ArticleDao {
     @Query("UPDATE articles SET isRead = :isRead WHERE id = :id")
     suspend fun setRead(id: String, isRead: Boolean)
 
+    @Query("UPDATE articles SET isFavourite = :isFavourite WHERE id = :id")
+    suspend fun setFavourite(id: String, isFavourite: Boolean)
+
     @Query(
         """
         UPDATE articles SET isRead = 1
         WHERE
             :scopeKind = 'ALL'
             OR (:scopeKind = 'UNREAD' AND isRead = 0)
+            OR (:scopeKind = 'FAVOURITES' AND isFavourite = 1)
             OR (:scopeKind = 'FEED' AND feedId = :scopeId)
             OR (:scopeKind = 'FOLDER' AND feedId IN (
                 SELECT id FROM feeds WHERE folderId = :scopeId

@@ -33,6 +33,7 @@ data class FolderEntity(
     indices = [
         Index(value = ["feedId"]),
         Index(value = ["isRead"]),
+        Index(value = ["isFavourite"]),
         Index(value = ["publishedAt"]),
     ],
 )
@@ -48,4 +49,5 @@ data class ArticleEntity(
     val publishedAt: Long? = null,
     val fetchedAt: Long,
     val isRead: Boolean = false,
+    val isFavourite: Boolean = false,
 )

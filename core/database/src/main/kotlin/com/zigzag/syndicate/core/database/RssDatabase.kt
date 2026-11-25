@@ -14,7 +14,7 @@ import com.zigzag.syndicate.core.database.model.FolderEntity
         FolderEntity::class,
         ArticleEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class RssDatabase : RoomDatabase() {

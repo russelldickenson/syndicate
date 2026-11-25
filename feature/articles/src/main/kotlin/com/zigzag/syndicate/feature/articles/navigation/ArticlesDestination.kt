@@ -16,6 +16,8 @@ data class ArticlesDestination(
 
         fun unread(): ArticlesDestination = ArticlesDestination(scope = SCOPE_UNREAD)
 
+        fun favourites(): ArticlesDestination = ArticlesDestination(scope = SCOPE_FAVOURITES)
+
         fun forFolder(id: String): ArticlesDestination =
             ArticlesDestination(scope = SCOPE_FOLDER, folderId = id)
 
@@ -24,6 +26,7 @@ data class ArticlesDestination(
 
         private const val SCOPE_ALL = "all"
         private const val SCOPE_UNREAD = "unread"
+        private const val SCOPE_FAVOURITES = "favourites"
         private const val SCOPE_FOLDER = "folder"
         private const val SCOPE_FEED = "feed"
     }
@@ -31,6 +34,7 @@ data class ArticlesDestination(
     fun toScope(): ArticleScope =
         when (scope) {
             SCOPE_UNREAD -> ArticleScope.Unread
+            SCOPE_FAVOURITES -> ArticleScope.Favourites
             SCOPE_FOLDER -> folderId?.let(ArticleScope::ForFolder) ?: ArticleScope.All
             SCOPE_FEED -> feedId?.let(ArticleScope::ForFeed) ?: ArticleScope.All
             else -> ArticleScope.All

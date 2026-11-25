@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
@@ -86,6 +87,14 @@ fun AppDrawer(
                     icon = Icons.Filled.Menu,
                     selected = currentDestination == AppDestination.ArticlesAll,
                     onClick = { onNavigate(AppDestination.ArticlesAll) },
+                )
+            }
+            item(key = "favourites") {
+                DrawerRow(
+                    label = "Favourites",
+                    icon = Icons.Filled.Favorite,
+                    selected = currentDestination == AppDestination.ArticlesFavourites,
+                    onClick = { onNavigate(AppDestination.ArticlesFavourites) },
                 )
             }
 

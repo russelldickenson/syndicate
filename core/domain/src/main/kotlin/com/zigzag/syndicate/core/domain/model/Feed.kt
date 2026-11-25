@@ -41,6 +41,7 @@ data class Article(
     val publishedAt: Instant? = null,
     val fetchedAt: Instant,
     val isRead: Boolean = false,
+    val isFavourite: Boolean = false,
 )
 
 data class UnreadCounts(
@@ -71,6 +72,7 @@ data class FeedRefreshError(
 sealed interface ArticleScope {
     data object All : ArticleScope
     data object Unread : ArticleScope
+    data object Favourites : ArticleScope
     data class ForFeed(val feedId: String) : ArticleScope
     data class ForFolder(val folderId: String) : ArticleScope
 }

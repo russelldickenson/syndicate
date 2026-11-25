@@ -200,10 +200,12 @@ internal fun ArticlesScreen(
             if (!state.isLoading && state.articles.isEmpty()) {
                 EmptyState(
                     title = "Nothing here yet",
-                    message = if (state.unreadOnly) {
-                        "You're all caught up. Switch to All to see read articles."
-                    } else {
-                        "Articles from your feeds will appear here."
+                    message = when {
+                        state.scope is ArticleScope.Favourites ->
+                            "Tap the heart on an article to save it here."
+                        state.unreadOnly ->
+                            "You're all caught up. Switch to All to see read articles."
+                        else -> "Articles from your feeds will appear here."
                     },
                     actionLabel = "Browse feeds",
                     onAction = onNavigateToFeeds,
@@ -253,7 +255,7 @@ internal fun ArticlesScreen(
                             }
                         }
                     }
-                    if (thumb != null) {
+                    thumb?.let { range ->
                         val barColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         Canvas(
                             modifier = Modifier
@@ -262,7 +264,7 @@ internal fun ArticlesScreen(
                                 .width(4.dp)
                                 .padding(vertical = 8.dp),
                         ) {
-                            val (start, end) = thumb!!
+                            val (start, end) = range
                             drawRoundRect(
                                 color = barColor,
                                 topLeft = androidx.compose.ui.geometry.Offset(0f, start * size.height),

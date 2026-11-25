@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -83,17 +85,20 @@ fun ReaderRoute(
     val hasNext by viewModel.hasNext.collectAsStateWithLifecycle()
     val articleFont by viewModel.articleFont.collectAsStateWithLifecycle()
     val articleFontSize by viewModel.articleFontSize.collectAsStateWithLifecycle()
+    val isFavourite = article?.isFavourite ?: false
 
     ReaderScreen(
         article = article,
         html = html,
         link = link,
+        isFavourite = isFavourite,
         articleFont = articleFont,
         articleFontSize = articleFontSize,
         canGoPrevious = hasPrevious,
         canGoNext = hasNext,
         onPrevious = viewModel::previous,
         onNext = viewModel::next,
+        onToggleFavourite = viewModel::toggleFavourite,
         onNavigateBack = onNavigateBack,
         onSetFont = viewModel::setArticleFont,
         onSetFontSize = viewModel::setArticleFontSize,
@@ -105,12 +110,14 @@ internal fun ReaderScreen(
     article: Article?,
     html: String?,
     link: String?,
+    isFavourite: Boolean,
     articleFont: ArticleFont,
     articleFontSize: ArticleFontSize,
     canGoPrevious: Boolean,
     canGoNext: Boolean,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onToggleFavourite: () -> Unit,
     onNavigateBack: () -> Unit,
     onSetFont: (ArticleFont) -> Unit,
     onSetFontSize: (ArticleFontSize) -> Unit,
@@ -222,7 +229,7 @@ internal fun ReaderScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(
@@ -233,6 +240,22 @@ internal fun ReaderScreen(
                         .offset(x = (-12).dp)
                         .semantics { contentDescription = "Back" },
                 ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
+                Spacer(Modifier.weight(1f))
+                IconButton(
+                    onClick = onToggleFavourite,
+                    modifier = Modifier.semantics {
+                        contentDescription = if (isFavourite) {
+                            "Remove from favourites"
+                        } else {
+                            "Add to favourites"
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = null,
+                    )
+                }
                 IconButton(
                     onClick = { showAppearanceSheet = true },
                     modifier = Modifier

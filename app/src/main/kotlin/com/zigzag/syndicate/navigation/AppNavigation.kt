@@ -45,6 +45,9 @@ sealed interface AppDestination : NavKey {
     data object ArticlesUnread : AppDestination
 
     @Serializable
+    data object ArticlesFavourites : AppDestination
+
+    @Serializable
     data object Feeds : AppDestination
 
     @Serializable
@@ -125,6 +128,7 @@ fun AppNavigation() {
                 backStack.add(AppDestination.FeedArticles(scope.feedId, title))
             }
             ArticleScope.Unread -> backStack.add(AppDestination.ArticlesUnread)
+            ArticleScope.Favourites -> backStack.add(AppDestination.ArticlesFavourites)
             ArticleScope.All -> backStack.add(AppDestination.ArticlesAll)
         }
     }
@@ -148,6 +152,15 @@ fun AppNavigation() {
             ArticlesRoute(
                 scope = ArticleScope.Unread,
                 title = "Unread",
+                onOpenArticles = ::openArticles,
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onOpenDrawer = openDrawer,
+            )
+        }
+        entry<AppDestination.ArticlesFavourites> {
+            ArticlesRoute(
+                scope = ArticleScope.Favourites,
+                title = "Favourites",
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
                 onOpenDrawer = openDrawer,

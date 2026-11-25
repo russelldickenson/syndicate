@@ -80,6 +80,7 @@ class ArticlesViewModel @Inject constructor(
             setScope(
                 when (restored) {
                     "unread" -> ArticleScope.Unread
+                    "favourites" -> ArticleScope.Favourites
                     "folder" -> savedStateHandle.get<String>("folderId")
                         ?.let(ArticleScope::ForFolder) ?: ArticleScope.All
                     "feed" -> savedStateHandle.get<String>("feedId")
@@ -158,6 +159,7 @@ class ArticlesViewModel @Inject constructor(
         when (currentScope) {
             ArticleScope.All -> "All articles"
             ArticleScope.Unread -> "Unread"
+            ArticleScope.Favourites -> "Favourites"
             is ArticleScope.ForFeed -> "Feed"
             is ArticleScope.ForFolder -> "Folder"
         }
@@ -166,6 +168,7 @@ class ArticlesViewModel @Inject constructor(
         when (currentScope) {
             ArticleScope.All -> "All articles"
             ArticleScope.Unread -> "Unread"
+            ArticleScope.Favourites -> "Favourites"
             is ArticleScope.ForFeed ->
                 feedRepository.observeFeeds(FeedSort.NAME)
                     .firstOrNull()

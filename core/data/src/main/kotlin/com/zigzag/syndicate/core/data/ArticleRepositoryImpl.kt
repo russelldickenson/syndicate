@@ -17,6 +17,7 @@ private val ArticleScope.queryKind: String
     get() = when (this) {
         ArticleScope.All -> "ALL"
         ArticleScope.Unread -> "UNREAD"
+        ArticleScope.Favourites -> "FAVOURITES"
         is ArticleScope.ForFeed -> "FEED"
         is ArticleScope.ForFolder -> "FOLDER"
     }
@@ -83,6 +84,12 @@ class ArticleRepositoryImpl @Inject constructor(
     override suspend fun markAllRead(scope: ArticleScope) {
         withContext(dispatchers.io) {
             articleDao.markAllRead(scope.queryKind, scope.queryId)
+        }
+    }
+
+    override suspend fun setFavourite(articleId: String, isFavourite: Boolean) {
+        withContext(dispatchers.io) {
+            articleDao.setFavourite(articleId, isFavourite)
         }
     }
 
