@@ -10,6 +10,7 @@ Syndicate is a native Android reader for RSS and Atom feeds. Articles are stored
 - Group feeds with multiple tags per feed
 - Unread badges scoped to the current focus: all articles, one feed, or a tag
 - Mark a single article read, or mark all articles in the current focus read
+- Heart articles in the reader and find them again in the Favourites category
 - Manual refresh, plus optional refresh on startup
 - Sort articles, feeds, and tags by name, date, or unread count
 - In-app reader with font and size options, and a link to the original page
