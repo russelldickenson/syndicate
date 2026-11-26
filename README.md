@@ -19,21 +19,15 @@ Syndicate is a native Android reader for RSS and Atom feeds. Articles are stored
 
 ## Install
 
-Requires JDK 17 and Android SDK platform 37.
+Syndicate requires Android 7.0 (API 24) or later. Download `syndicate.apk` from the [latest release](https://github.com/russelldickenson/syndicate/releases/latest) and open it on your device to install. Android will ask you to allow installation from unknown sources.
+
+If the device is connected to a computer, install the downloaded file with:
 
 ```bash
-git clone https://github.com/russelldickenson/syndicate.git
-cd syndicate
-./gradlew :app:assembleDebug
+adb install syndicate.apk
 ```
 
-Install the debug APK on a connected device or emulator:
-
-```bash
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-Run the unit tests with `./gradlew testDebugUnitTest`.
+Building from source is not required to use the app.
 
 ## Authors
 
