@@ -1,35 +1,55 @@
-#!/usr/bin/env bash
+#!/bin/zsh
+# Builds a signed release APK of Syndicate.
+#
+# Signing settings use the same ANDROID_* names as the GitHub Actions workflows:
+#   ANDROID_KEYSTORE_PATH     path to the shared PKCS12 keystore
+#   ANDROID_KEYSTORE_PASSWORD passphrase for that keystore
+#   ANDROID_KEY_ALIAS         optional: this repo's default is in gradle.properties
+#
+# Export them from your password manager before running, e.g.:
+#   export ANDROID_KEYSTORE_PATH="$HOME/.android-signing/android-shared.p12"
+#   export ANDROID_KEYSTORE_PASSWORD="$( ... )"
+#   ./build.sh
+#
+# The output filename comes from apk.outputFileName in gradle.properties.
+
 set -euo pipefail
 
-cd "$(dirname "$0")"
+ROOT="${0:A:h}"
+cd "$ROOT"
 
-# Name of the signed APK this script produces. Change this to rename the output.
-APK_NAME="syndicate.apk"
+: "${ANDROID_KEYSTORE_PATH:=$HOME/.android-signing/android-shared.p12}"
+export ANDROID_KEYSTORE_PATH
 
-# Placeholder defaults for local builds. CI can supply the same values as
-# environment variables, which take precedence over everything below.
-: "${SYNDICATE_KEYSTORE_FILE:=$PWD/release.keystore}"   # path to your .jks or .keystore
-: "${SYNDICATE_STORE_PASSWORD:=CHANGE_ME}"
-: "${SYNDICATE_KEY_ALIAS:=CHANGE_ME}"
-: "${SYNDICATE_KEY_PASSWORD:=CHANGE_ME}"
-
-export SYNDICATE_KEYSTORE_FILE SYNDICATE_STORE_PASSWORD SYNDICATE_KEY_ALIAS SYNDICATE_KEY_PASSWORD
-
-if [[ ! -f "$SYNDICATE_KEYSTORE_FILE" ]]; then
-  echo "error: keystore not found at $SYNDICATE_KEYSTORE_FILE" >&2
-  echo "Set SYNDICATE_KEYSTORE_FILE or replace the placeholder in build.sh." >&2
+if [[ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
+  print -u2 "error: set ANDROID_KEYSTORE_PASSWORD (from your password manager)."
   exit 1
 fi
+export ANDROID_KEYSTORE_PASSWORD
 
-./gradlew :app:assembleRelease
-
-GRADLE_APK="app/build/outputs/apk/release/app-release.apk"
-if [[ ! -f "$GRADLE_APK" ]]; then
-  echo "error: expected APK not found at $GRADLE_APK" >&2
-  exit 1
+# ANDROID_KEY_ALIAS is optional; gradle.properties supplies this app's alias.
+if [[ -n "${ANDROID_KEY_ALIAS:-}" ]]; then
+  export ANDROID_KEY_ALIAS
 fi
 
-mkdir -p "$(dirname "$APK_NAME")"
-cp "$GRADLE_APK" "$APK_NAME"
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+[[ -d "$ANDROID_HOME" ]] || { print -u2 "error: Android SDK not found at $ANDROID_HOME (set ANDROID_HOME)."; exit 1; }
+[[ -s "$ANDROID_KEYSTORE_PATH" ]] || { print -u2 "error: keystore missing or empty at $ANDROID_KEYSTORE_PATH."; exit 1; }
 
-echo "Signed APK: $PWD/$APK_NAME"
+print "Building release APK..."
+./gradlew --console=plain -q assembleRelease
+
+APK_NAME=$(sed -n 's/^apk\.outputFileName=//p' "$ROOT/gradle.properties" | head -1)
+[[ -n "$APK_NAME" ]] || { print -u2 "error: apk.outputFileName is not set in $ROOT/gradle.properties."; exit 1; }
+APK="$ROOT/app/build/outputs/apk/release/$APK_NAME"
+[[ -s "$APK" ]] || { print -u2 "error: build finished but $APK was not produced."; exit 1; }
+
+# Check the signature if the SDK has apksigner (newest build-tools first).
+APKSIGNER=("$ANDROID_HOME"/build-tools/*/apksigner(N.On[1]))
+if [[ -n "${APKSIGNER[1]:-}" ]]; then
+  "${APKSIGNER[1]}" verify --verbose "$APK" 2>&1 | head -3
+fi
+
+print "\nSigned APK: $APK"
+
+cp "$APK" "$ROOT/$APK_NAME"

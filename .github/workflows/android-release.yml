@@ -1,0 +1,42 @@
+name: Android release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Call the reusable workflow in this repo, not an org-level template.
+    uses: ./.github/workflows/android-signed.yml
+    with:
+      artifact_name: ${{ github.event.repository.name }}
+      gradle_task: assembleRelease
+      java_version: "21"
+    secrets:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed APK
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ github.event.repository.name }}-signed-apk
+          path: release-apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release-apk/*.apk
+          generate_release_notes: true

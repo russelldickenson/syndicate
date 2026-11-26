@@ -1,0 +1,104 @@
+name: Android signed APK
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: Name of the resulting workflow artifact
+        required: true
+        type: string
+
+      gradle_task:
+        description: Gradle task used to build the APK
+        required: false
+        default: assembleRelease
+        type: string
+
+      java_version:
+        required: false
+        default: "17"
+        type: string
+
+    # Only the shared keystore and its passphrase are secrets. The app-specific alias
+    # lives in each repo's gradle.properties (signing.defaultKeyAlias), and PKCS12 uses
+    # the store password as the key password.
+    secrets:
+      ANDROID_KEYSTORE_BASE64:
+        required: true
+      ANDROID_KEYSTORE_PASSWORD:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Decode signing keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" \
+            | base64 --decode \
+            > "$RUNNER_TEMP/signing-keystore.jks"
+
+      - name: Verify signing keystore
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYSTORE="$RUNNER_TEMP/signing-keystore.jks"
+
+          if [[ ! -s "$KEYSTORE" ]]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is empty or missing. Store the base64-encoded .p12 as a repository secret and check the secret is visible to this repo."
+            exit 1
+          fi
+          if [[ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD is empty or missing."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$KEYSTORE" -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo "::error::The decoded keystore could not be opened with ANDROID_KEYSTORE_PASSWORD. Check both secrets."
+            exit 1
+          fi
+          echo "Signing keystore decoded and validated."
+
+      - name: Build signed APK
+        shell: bash
+        env:
+          GRADLE_TASK: ${{ inputs.gradle_task }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/signing-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          ./gradlew --stacktrace "$GRADLE_TASK"
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact_name }}-signed-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Remove signing key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/signing-keystore.jks"
