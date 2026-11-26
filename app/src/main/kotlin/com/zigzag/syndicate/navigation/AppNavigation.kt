@@ -48,7 +48,7 @@ sealed interface AppDestination : NavKey {
     data object ArticlesFavourites : AppDestination
 
     @Serializable
-    data object Feeds : AppDestination
+    data class Feeds(val openAddFeed: Boolean = false) : AppDestination
 
     @Serializable
     data object Settings : AppDestination
@@ -137,6 +137,7 @@ fun AppNavigation() {
     val coroutineScope = rememberCoroutineScope()
     val currentDestination = backStack.lastOrNull()
     val openDrawer: () -> Unit = { coroutineScope.launch { drawerState.open() } }
+    val openAddFeed: () -> Unit = { navigateTop(AppDestination.Feeds(openAddFeed = true)) }
 
     val entries = entryProvider<NavKey> {
         entry<AppDestination.ArticlesAll> {
@@ -144,7 +145,8 @@ fun AppNavigation() {
                 scope = ArticleScope.All,
                 title = "All articles",
                 onOpenArticles = ::openArticles,
-                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
+                onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
             )
         }
@@ -153,7 +155,8 @@ fun AppNavigation() {
                 scope = ArticleScope.Unread,
                 title = "Unread",
                 onOpenArticles = ::openArticles,
-                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
+                onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
             )
         }
@@ -162,7 +165,8 @@ fun AppNavigation() {
                 scope = ArticleScope.Favourites,
                 title = "Favourites",
                 onOpenArticles = ::openArticles,
-                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
+                onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
             )
         }
@@ -171,7 +175,8 @@ fun AppNavigation() {
                 scope = ArticleScope.ForFolder(key.folderId),
                 title = key.title,
                 onOpenArticles = ::openArticles,
-                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
+                onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
             )
         }
@@ -182,15 +187,17 @@ fun AppNavigation() {
                 title = key.title,
                 faviconBaseUrl = feed?.siteUrl?.takeIf { it.isNotBlank() } ?: feed?.url,
                 onOpenArticles = ::openArticles,
-                onNavigateToFeeds = { navigateTop(AppDestination.Feeds) },
+                onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
+                onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
             )
         }
-        entry<AppDestination.Feeds> {
+        entry<AppDestination.Feeds> { key ->
             FeedsRoute(
                 onNavigateToArticles = ::openScope,
                 onNavigateToSettings = { navigateTop(AppDestination.Settings) },
                 onOpenDrawer = openDrawer,
+                openAddFeed = key.openAddFeed,
             )
         }
         entry<AppDestination.Reader> { key ->

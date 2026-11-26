@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,9 +66,14 @@ fun FeedsRoute(
     onNavigateToArticles: (scope: ArticleScope) -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenDrawer: () -> Unit,
+    openAddFeed: Boolean = false,
 ) {
     val viewModel: FeedsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(openAddFeed) {
+        if (openAddFeed) viewModel.showAddFeedDialog()
+    }
 
     FeedsScreen(
         state = state,

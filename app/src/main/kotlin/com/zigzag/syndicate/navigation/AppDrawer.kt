@@ -146,8 +146,8 @@ fun AppDrawer(
                 DrawerRow(
                     label = "Manage feeds",
                     icon = Icons.Filled.Flag,
-                    selected = currentDestination == AppDestination.Feeds,
-                    onClick = { onNavigate(AppDestination.Feeds) },
+                    selected = currentDestination is AppDestination.Feeds,
+                    onClick = { onNavigate(AppDestination.Feeds()) },
                 )
             }
             item(key = "settings") {

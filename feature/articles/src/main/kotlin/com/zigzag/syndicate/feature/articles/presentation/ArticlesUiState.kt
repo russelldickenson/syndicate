@@ -6,6 +6,7 @@ import com.zigzag.syndicate.core.domain.model.ArticleSort
 
 data class ArticlesUiState(
     val articles: List<Article> = emptyList(),
+    val hasFeeds: Boolean = true,
     val scope: ArticleScope = ArticleScope.All,
     val scopeTitle: String = "All articles",
     val sort: ArticleSort = ArticleSort.NEWEST,

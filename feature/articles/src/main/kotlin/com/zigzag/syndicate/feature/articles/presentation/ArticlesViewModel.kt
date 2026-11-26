@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -50,16 +51,23 @@ class ArticlesViewModel @Inject constructor(
             }
             .onEach { loading.value = false }
 
+    private val hasFeeds = feedRepository.observeFeeds(FeedSort.NAME).map { it.isNotEmpty() }
+
     val uiState: StateFlow<ArticlesUiState> =
         combine(
             articles,
             query,
-            combine(loading, errorMessage) { isLoading, error -> ArticleStatus(isLoading, error) },
+            combine(
+                combine(loading, errorMessage) { isLoading, error -> ArticleStatus(isLoading, error) },
+                hasFeeds,
+            ) { status, feedsExist -> status to feedsExist },
             scopeTitle,
             confirmMarkAllRead,
-        ) { list, currentQuery, status, title, showConfirm ->
+        ) { list, currentQuery, statusAndFeeds, title, showConfirm ->
+            val (status, feedsExist) = statusAndFeeds
             ArticlesUiState(
                 articles = list,
+                hasFeeds = feedsExist,
                 scope = currentQuery.scope,
                 scopeTitle = title,
                 sort = currentQuery.sort,

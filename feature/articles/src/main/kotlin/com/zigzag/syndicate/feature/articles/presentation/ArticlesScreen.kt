@@ -67,6 +67,7 @@ fun ArticlesRoute(
     scope: ArticleScope,
     onOpenArticles: (List<String>, Int) -> Unit,
     onNavigateToFeeds: () -> Unit,
+    onAddFeed: () -> Unit,
     onOpenDrawer: () -> Unit,
     title: String? = null,
     faviconBaseUrl: String? = null,
@@ -82,6 +83,7 @@ fun ArticlesRoute(
         faviconBaseUrl = faviconBaseUrl,
         onOpenArticles = onOpenArticles,
         onNavigateToFeeds = onNavigateToFeeds,
+        onAddFeed = onAddFeed,
         onOpenDrawer = onOpenDrawer,
     )
 }
@@ -94,6 +96,7 @@ internal fun ArticlesScreen(
     faviconBaseUrl: String?,
     onOpenArticles: (List<String>, Int) -> Unit,
     onNavigateToFeeds: () -> Unit,
+    onAddFeed: () -> Unit,
     onOpenDrawer: () -> Unit,
 ) {
     var showSortSheet by remember { mutableStateOf(false) }
@@ -201,14 +204,16 @@ internal fun ArticlesScreen(
                 EmptyState(
                     title = "Nothing here yet",
                     message = when {
-                        state.scope is ArticleScope.Favourites ->
+                        state.scope is ArticleScope.Favourites && state.hasFeeds ->
                             "Tap the heart on an article to save it here."
+                        !state.hasFeeds ->
+                            "Add a feed to start reading your favorite sites."
                         state.unreadOnly ->
                             "You're all caught up. Switch to All to see read articles."
                         else -> "Articles from your feeds will appear here."
                     },
-                    actionLabel = "Browse feeds",
-                    onAction = onNavigateToFeeds,
+                    actionLabel = if (state.hasFeeds) "Browse feeds" else "Add feeds",
+                    onAction = if (state.hasFeeds) onNavigateToFeeds else onAddFeed,
                 )
             } else {
                 val listState = rememberLazyListState()
