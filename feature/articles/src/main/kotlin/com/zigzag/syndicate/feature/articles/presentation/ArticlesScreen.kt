@@ -23,12 +23,9 @@ import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -114,51 +111,44 @@ internal fun ArticlesScreen(
                     ) { Icon(Icons.Filled.Menu, contentDescription = null) }
                 },
                 actions = {
-                    FilterChip(
-                        selected = state.unreadOnly,
-                        onClick = viewModel::toggleUnreadOnly,
-                        label = {},
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.MarkEmailUnread,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
+                    IconToggleButton(
+                        checked = state.unreadOnly,
+                        onCheckedChange = { viewModel.toggleUnreadOnly() },
                         modifier = Modifier.semantics {
                             contentDescription = if (state.unreadOnly) "Show all articles" else "Show unread only"
                         },
-                        border = null,
-                        colors = FilterChipDefaults.filterChipColors(),
-                    )
-                    AssistChip(
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MarkEmailUnread,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = if (state.unreadOnly) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                    IconButton(
                         onClick = viewModel::showMarkAllReadConfirmation,
-                        label = {},
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.MarkEmailRead,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
                         modifier = Modifier.semantics { contentDescription = "Mark all as read" },
-                        colors = AssistChipDefaults.assistChipColors(),
-                        border = null,
-                    )
-                    AssistChip(
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MarkEmailRead,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    IconButton(
                         onClick = { showSortSheet = true },
-                        label = {},
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.Sort,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
                         modifier = Modifier.semantics { contentDescription = "Sort articles" },
-                        colors = AssistChipDefaults.assistChipColors(),
-                        border = null,
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Sort,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 },
             )
         },
