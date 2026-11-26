@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/readme/hero.png" width="100%" alt="Syndicate — an offline-first RSS and Atom reader for Android">
+  <img src="./assets/readme/hero.png" width="100%" alt="Syndicate app icon and article list — an offline-first RSS and Atom reader for Android">
 </p>
 
 Syndicate is a native Android reader for RSS and Atom feeds. Articles are stored locally, read state is kept per article, and feeds can be grouped into folders so you can follow what matters without depending on a network connection.
