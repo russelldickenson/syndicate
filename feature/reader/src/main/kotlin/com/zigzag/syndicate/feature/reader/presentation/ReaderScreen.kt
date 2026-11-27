@@ -158,7 +158,12 @@ internal fun ReaderScreen(
         if (article != null && target == null) isLoading = false
     }
 
-    val dateLabel = article?.publishedAt?.let(::formatArticleDate).orEmpty()
+    val dateLocale = java.util.Locale.forLanguageTag(
+        androidx.compose.ui.text.intl.Locale.current.toLanguageTag(),
+    )
+    val dateLabel = article?.publishedAt
+        ?.let { formatArticleDate(it, locale = dateLocale) }
+        .orEmpty()
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     // Custom fonts are inlined into the HTML as a Base64 data URI so the WebView

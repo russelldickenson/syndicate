@@ -143,7 +143,12 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
     } else {
         MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
     }.copy(lineHeight = 20.sp)
-    val dateLabel = article.publishedAt?.let(::formatArticleDateTime).orEmpty()
+    val dateLocale = java.util.Locale.forLanguageTag(
+        androidx.compose.ui.text.intl.Locale.current.toLanguageTag(),
+    )
+    val dateLabel = article.publishedAt
+        ?.let { formatArticleDateTime(it, locale = dateLocale) }
+        .orEmpty()
     val faviconBaseUrl = article.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article.link
     val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
 
@@ -264,7 +269,10 @@ private fun ArticleFavicon(
     )
 }
 
-fun formatArticleDate(instant: kotlinx.datetime.Instant): String = formatArticleDateTime(instant)
+fun formatArticleDate(
+    instant: kotlinx.datetime.Instant,
+    locale: java.util.Locale = java.util.Locale.getDefault(),
+): String = formatArticleDateTime(instant, locale = locale)
 
 private fun faviconUrl(baseUrl: String?): String? {
     val trimmed = baseUrl?.trim().orEmpty()

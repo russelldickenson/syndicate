@@ -4,6 +4,7 @@ import java.time.ZoneId
 import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.datetime.Instant
 
 class DateTimeFormattingTest {
@@ -45,6 +46,18 @@ class DateTimeFormattingTest {
         )
 
         assertEquals("23.11.26, 09:30", formatted.normalizeSpaces())
+    }
+
+    @Test
+    fun australianLocaleUsesDayFirstOrder() {
+        val formatted = formatArticleDateTime(
+            instant = Instant.parse("2026-06-23T02:30:00Z"),
+            zoneId = ZoneId.of("Australia/Sydney"),
+            locale = Locale.forLanguageTag("en-AU"),
+        )
+
+        assertTrue(formatted.startsWith("23/"), formatted)
+        assertTrue(formatted.contains("pm"), formatted)
     }
 
     // CLDR uses either a plain space or a narrow no-break space before AM/PM
