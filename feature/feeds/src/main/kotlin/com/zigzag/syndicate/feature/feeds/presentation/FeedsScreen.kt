@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -136,7 +137,13 @@ internal fun FeedsScreen(
             FloatingActionButton(
                 onClick = viewModel::showAddFeedDialog,
                 modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_add_feed),
-            ) { Text(stringResource(CoreUiR.string.core_ui_add_symbol)) }
+            ) {
+                Icon(
+                    painter = painterResource(CoreUiR.drawable.core_ui_ic_add),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         },
     ) { padding ->
         Column(

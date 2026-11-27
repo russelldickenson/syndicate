@@ -19,7 +19,6 @@
     <string name="core_ui_label_folder_name">Folder name</string>
     <string name="core_ui_label_font">Font</string>
     <string name="core_ui_label_text_size">Text size</string>
-    <string name="core_ui_add_symbol">+</string>
     <string name="core_ui_label_feed_url">Feed URL</string>
 
     <!-- Accessibility labels -->
