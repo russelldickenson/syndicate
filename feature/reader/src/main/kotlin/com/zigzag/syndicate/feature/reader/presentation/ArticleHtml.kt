@@ -55,13 +55,15 @@ internal fun prepareArticleHtml(
             color: $textColor;
             font-family: $fontFamily;
             font-size: ${fontSizePx}px;
-            line-height: 1.6;
+            line-height: 1.5;
             overflow-wrap: break-word;
           }
+          p { margin: 0 0 12px; }
           a { color: $linkColor; }
           h1 { font-size: 1.75em; }
           h2 { font-size: 1.4em; }
           h3 { font-size: 1.15em; }
+          h1, h2, h3 { margin: 16px 0 8px; line-height: 1.3; }
           img { max-width: 100% !important; height: auto !important; }
           video, iframe { max-width: 100%; }
           table { max-width: 100%; }

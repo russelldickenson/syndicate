@@ -159,7 +159,7 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(
                 text = article.title,
                 style = titleStyle,
@@ -177,7 +177,7 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
                             .size(16.dp)
                             .clip(RoundedCornerShape(3.dp)),
                     )
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(4.dp))
                 }
                 Text(
                     text = article.feedTitle,

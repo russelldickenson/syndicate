@@ -19,6 +19,13 @@ class ArticleHtmlTest {
     }
 
     @Test
+    fun usesCompactBodySpacing() {
+        val prepared = prepareArticleHtml("x")
+        assertTrue(prepared.contains("line-height: 1.5;"))
+        assertTrue(prepared.contains("p { margin: 0 0 12px; }"))
+    }
+
+    @Test
     fun usesThemeAwareTextColors() {
         assertTrue(prepareArticleHtml("x", dark = false).contains("color: #1A1C23;"))
         assertTrue(prepareArticleHtml("x", dark = true).contains("color: #E3E1EC;"))
