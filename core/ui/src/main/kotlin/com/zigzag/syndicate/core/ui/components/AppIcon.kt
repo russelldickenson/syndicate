@@ -1,5 +1,6 @@
 package com.zigzag.syndicate.core.ui.components
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +17,7 @@ import com.zigzag.syndicate.core.ui.R
 fun AppIcon(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.core_ui_app_icon),
-        contentDescription = "Syndicate",
+        contentDescription = stringResource(R.string.core_ui_app_name),
         modifier = modifier
             .size(24.dp)
             .clip(RoundedCornerShape(6.dp)),

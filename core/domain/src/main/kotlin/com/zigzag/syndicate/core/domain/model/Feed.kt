@@ -77,41 +77,28 @@ sealed interface ArticleScope {
     data class ForFolder(val folderId: String) : ArticleScope
 }
 
-enum class ArticleSort(val label: String) {
-    NEWEST("Newest first"),
-    OLDEST("Oldest first"),
-    TITLE("Title A-Z"),
-    FEED("Feed name"),
+enum class ArticleSort {
+    NEWEST, OLDEST, TITLE, FEED,
 }
 
-enum class FeedSort(val label: String) {
-    NAME("Name"),
-    UNREAD("Unread count"),
-    LAST_UPDATED("Last updated"),
+enum class FeedSort {
+    NAME, UNREAD, LAST_UPDATED,
 }
 
-enum class FolderSort(val label: String) {
-    NAME("Name"),
-    UNREAD("Unread count"),
+enum class FolderSort {
+    NAME, UNREAD,
 }
 
-enum class ThemeMode(val label: String) {
-    SYSTEM("System"),
-    LIGHT("Light"),
-    DARK("Dark"),
+enum class ThemeMode {
+    SYSTEM, LIGHT, DARK,
 }
 
-enum class ArticleFont(val label: String) {
-    SANS_SERIF("Sans Serif (System)"),
-    SERIF("Serif (System)"),
-    INTER("Google Inter"),
-    ATKINSON("Atkinson Hyperlegible Next"),
+enum class ArticleFont {
+    SANS_SERIF, SERIF, INTER, ATKINSON,
 }
 
-enum class ArticleFontSize(val label: String) {
-    SMALL("Small"),
-    MEDIUM("Medium"),
-    LARGE("Large"),
+enum class ArticleFontSize {
+    SMALL, MEDIUM, LARGE,
 }
 
 data class UserSettings(

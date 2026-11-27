@@ -1,5 +1,8 @@
 package com.zigzag.syndicate.feature.settings.presentation
 
+import com.zigzag.syndicate.core.ui.components.contentDescriptionRes
+import com.zigzag.syndicate.core.ui.util.labelRes
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -31,8 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,10 +94,10 @@ internal fun SettingsScreen(
                         } != null
                     }.getOrDefault(false)
                     snackbarHostState.showSnackbar(
-                        if (written) "Feeds exported" else "Could not write the export file",
+                        viewModel.exportedMessage(written),
                     )
                 },
-                onFailure = { snackbarHostState.showSnackbar("Could not export feeds") },
+                onFailure = { snackbarHostState.showSnackbar(viewModel.exportFailedMessage) },
             )
         }
     }
@@ -105,17 +113,20 @@ internal fun SettingsScreen(
                 }
             }.getOrNull()
             if (opml == null) {
-                snackbarHostState.showSnackbar("Could not read the selected file")
+                snackbarHostState.showSnackbar(viewModel.readFailedMessage)
                 return@launch
             }
             viewModel.importSubscriptions(opml).fold(
                 onSuccess = { result ->
                     snackbarHostState.showSnackbar(
-                        "Imported ${result.added} feed(s), ${result.skipped} duplicate(s) skipped" +
-                            if (result.failed > 0) ", ${result.failed} failed" else "",
+                        viewModel.importedMessage(
+                            result.added,
+                            result.skipped,
+                            result.failed,
+                        ),
                     )
                 },
-                onFailure = { snackbarHostState.showSnackbar("Could not import feeds") },
+                onFailure = { snackbarHostState.showSnackbar(viewModel.importFailedMessage) },
             )
         }
     }
@@ -124,11 +135,11 @@ internal fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Syndicate") },
+                title = { Text(stringResource(CoreUiR.string.core_ui_app_name)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onOpenDrawer,
-                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
                     ) {
                         Icon(
                             painter = painterResource(CoreUiR.drawable.core_ui_ic_menu),
@@ -161,7 +172,7 @@ internal fun SettingsScreen(
                             ),
                         ) {
                             Text(
-                                text = mode.label,
+                                text = stringResource(mode.labelRes()),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                         }
@@ -194,15 +205,15 @@ internal fun SettingsScreen(
             item(key = "subscriptions_header") { SectionHeader("Subscriptions") }
             item(key = "export_feeds") {
                 PreferenceRow(
-                    label = "Export feeds",
-                    value = "OPML file",
+                    label = stringResource(CoreUiR.string.core_ui_label_export_feeds),
+                    value = stringResource(CoreUiR.string.core_ui_label_opml),
                     onClick = { exportLauncher.launch("syndicate-feeds.opml") },
                 )
             }
             item(key = "import_feeds") {
                 PreferenceRow(
-                    label = "Import feeds",
-                    value = "OPML file",
+                    label = stringResource(CoreUiR.string.core_ui_label_import_feeds),
+                    value = stringResource(CoreUiR.string.core_ui_label_opml),
                     onClick = { importLauncher.launch(arrayOf("*/*")) },
                 )
             }
@@ -217,12 +228,12 @@ internal fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Refresh on startup",
+                            text = stringResource(CoreUiR.string.core_ui_label_refresh_on_startup),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = "Fetch new articles when the app opens",
+                            text = stringResource(CoreUiR.string.core_ui_label_refresh_on_startup_summary),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -234,25 +245,25 @@ internal fun SettingsScreen(
                 }
             }
 
-            item(key = "sort_header") { SectionHeader("Sorting") }
+            item(key = "sort_header") { SectionHeader(stringResource(CoreUiR.string.core_ui_label_sorting)) }
             item(key = "sort_articles") {
                 PreferenceRow(
-                    label = "Articles",
-                    value = settings.articleSort.label,
+                    label = stringResource(CoreUiR.string.core_ui_label_articles),
+                    value = stringResource(settings.articleSort.labelRes()),
                     onClick = { sortSheet = SortKind.ARTICLES },
                 )
             }
             item(key = "sort_feeds") {
                 PreferenceRow(
-                    label = "Feeds",
-                    value = settings.feedSort.label,
+                    label = stringResource(CoreUiR.string.core_ui_title_feeds),
+                    value = stringResource(settings.feedSort.labelRes()),
                     onClick = { sortSheet = SortKind.FEEDS },
                 )
             }
             item(key = "sort_folders") {
                 PreferenceRow(
-                    label = "Folders",
-                    value = settings.folderSort.label,
+                    label = stringResource(CoreUiR.string.core_ui_label_folders),
+                    value = stringResource(settings.folderSort.labelRes()),
                     onClick = { sortSheet = SortKind.FOLDERS },
                 )
             }
@@ -261,27 +272,27 @@ internal fun SettingsScreen(
 
     when (sortSheet) {
         SortKind.ARTICLES -> SortSheet(
-            title = "Sort articles",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_articles),
             options = ArticleSort.entries,
             selected = settings.articleSort,
             onSelect = viewModel::setArticleSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { sortSheet = null },
         )
         SortKind.FEEDS -> SortSheet(
-            title = "Sort feeds",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_feeds),
             options = FeedSort.entries,
             selected = settings.feedSort,
             onSelect = viewModel::setFeedSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { sortSheet = null },
         )
         SortKind.FOLDERS -> SortSheet(
-            title = "Sort folders",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_folders),
             options = FolderSort.entries,
             selected = settings.folderSort,
             onSelect = viewModel::setFolderSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { sortSheet = null },
         )
         null -> Unit
@@ -295,10 +306,28 @@ private fun PreferenceRow(
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
+    val selectedLabel = if (selected) stringResource(CoreUiR.string.core_ui_state_selected) else null
+    val preferenceAction = onClick
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier
+                        .clickable(onClick = onClick)
+                        .clearAndSetSemantics {
+                            role = Role.Button
+                            contentDescription = listOfNotNull(label, value).joinToString(", ")
+                            if (selectedLabel != null) stateDescription = selectedLabel
+                            onClick {
+                                preferenceAction?.invoke()
+                                true
+                            }
+                        }
+                } else {
+                    Modifier
+                },
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -316,7 +345,7 @@ private fun PreferenceRow(
             )
         }
         if (selected) {
-            Text(text = "✓", color = MaterialTheme.colorScheme.primary)
+            Text(text = stringResource(CoreUiR.string.core_ui_checkmark), color = MaterialTheme.colorScheme.primary)
         }
     }
 }

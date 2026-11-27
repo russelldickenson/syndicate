@@ -1,5 +1,8 @@
 package com.zigzag.syndicate.feature.feeds.presentation
 
+import com.zigzag.syndicate.core.ui.components.contentDescriptionRes
+import androidx.compose.ui.res.stringResource
+import com.zigzag.syndicate.core.ui.util.labelRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -94,30 +97,30 @@ internal fun FeedsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Feeds") },
+                title = { Text(stringResource(CoreUiR.string.core_ui_title_feeds)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onOpenDrawer,
-                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
                 },
                 actions = {
                     IconButton(
                         onClick = { showFeedSortSheet = true },
-                        modifier = Modifier.semantics { contentDescription = "Sort feeds" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_sort_feeds),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_sort), contentDescription = null) }
                     IconButton(
                         onClick = { showFolderSortSheet = true },
-                        modifier = Modifier.semantics { contentDescription = "Sort folders" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_sort_folders),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_swap_vert), contentDescription = null) }
                     IconButton(
                         onClick = viewModel::refreshAll,
                         enabled = !state.isRefreshing,
-                        modifier = Modifier.semantics { contentDescription = "Refresh feeds" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_refresh_feeds),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_refresh), contentDescription = null) }
                     IconButton(
                         onClick = onNavigateToSettings,
-                        modifier = Modifier.semantics { contentDescription = "Settings" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_label_settings),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_settings), contentDescription = null) }
                 },
             )
@@ -125,8 +128,8 @@ internal fun FeedsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = viewModel::showAddFeedDialog,
-                modifier = Modifier.semantics { contentDescription = "Add feed" },
-            ) { Text("+") }
+                modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_add_feed),
+            ) { Text(stringResource(CoreUiR.string.core_ui_add_symbol)) }
         },
     ) { padding ->
         Column(
@@ -149,9 +152,9 @@ internal fun FeedsScreen(
 
             if (state.feeds.isEmpty()) {
                 EmptyState(
-                    title = "No feeds yet",
-                    message = "Add a feed to start reading your favorite sites.",
-                    actionLabel = "Add feed",
+                    title = stringResource(CoreUiR.string.core_ui_empty_no_feeds_title),
+                    message = stringResource(CoreUiR.string.core_ui_empty_no_feeds),
+                    actionLabel = stringResource(CoreUiR.string.core_ui_cd_add_feed),
                     onAction = viewModel::showAddFeedDialog,
                 )
             } else {
@@ -168,22 +171,22 @@ internal fun FeedsScreen(
 
     if (showFeedSortSheet) {
         SortSheet(
-            title = "Sort feeds",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_feeds),
             options = FeedSort.entries,
             selected = state.sort,
             onSelect = viewModel::setFeedSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { showFeedSortSheet = false },
         )
     }
 
     if (showFolderSortSheet) {
         SortSheet(
-            title = "Sort folders",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_folders),
             options = FolderSort.entries,
             selected = state.folderSort,
             onSelect = viewModel::setFolderSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { showFolderSortSheet = false },
         )
     }
@@ -220,7 +223,7 @@ private fun FeedList(
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (state.folders.isNotEmpty()) {
-            item(key = "folders_header") { SectionHeader("Folders") }
+            item(key = "folders_header") { SectionHeader(stringResource(CoreUiR.string.core_ui_label_folders)) }
             items(items = state.folders, key = { it.id }) { folder ->
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                     FolderRow(
@@ -233,7 +236,7 @@ private fun FeedList(
                 }
             }
         }
-        item(key = "feeds_header") { SectionHeader("Feeds") }
+        item(key = "feeds_header") { SectionHeader(stringResource(CoreUiR.string.core_ui_title_feeds)) }
         items(items = state.feeds, key = { it.id }) { feed ->
             Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                 FeedRow(
@@ -256,13 +259,13 @@ private fun AddFeedDialog(
 ) {
     AlertDialog(
         onDismissRequest = viewModel::dismissAddFeedDialog,
-        title = { Text("Add feed") },
+        title = { Text(stringResource(CoreUiR.string.core_ui_dialog_add_feed_title)) },
         text = {
             Column {
                 TextField(
                     value = state.feedUrlInput,
                     onValueChange = viewModel::onFeedUrlChanged,
-                    label = { Text("Feed URL") },
+                    label = { Text(stringResource(CoreUiR.string.core_ui_label_feed_url)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -284,10 +287,10 @@ private fun AddFeedDialog(
             TextButton(
                 onClick = { viewModel.previewFeed(state.feedUrlInput) },
                 enabled = !state.isSaving,
-            ) { Text(if (state.isSaving) "Checking…" else "Continue") }
+            ) { Text(stringResource(if (state.isSaving) CoreUiR.string.core_ui_action_checking else CoreUiR.string.core_ui_action_continue)) }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::dismissAddFeedDialog) { Text("Cancel") }
+            TextButton(onClick = viewModel::dismissAddFeedDialog) { Text(stringResource(CoreUiR.string.core_ui_action_cancel)) }
         },
     )
 }
@@ -298,7 +301,8 @@ private fun DuplicateFeedMessage(
     onViewFeed: (String) -> Unit,
 ) {
     val message = buildAnnotatedString {
-        append("You’re already subscribed to that feed.\n")
+        append(stringResource(CoreUiR.string.core_ui_msg_duplicate_feed))
+        append("\n")
         withLink(LinkAnnotation.Clickable(tag = "view_feed") { onViewFeed(feedId) }) {
             withStyle(
                 SpanStyle(
@@ -306,7 +310,7 @@ private fun DuplicateFeedMessage(
                     textDecoration = TextDecoration.Underline,
                 ),
             ) {
-                append("View feed →")
+                append(stringResource(CoreUiR.string.core_ui_action_view_feed))
             }
         }
     }
@@ -321,11 +325,11 @@ private fun ConfirmFeedDialog(
 ) {
     AlertDialog(
         onDismissRequest = viewModel::backToFeedUrl,
-        title = { Text("Add this feed?") },
+        title = { Text(stringResource(CoreUiR.string.core_ui_dialog_add_feed_confirm_title)) },
         text = {
             Column {
                 Text(
-                    text = "Add \"${state.feedPreviewTitle}\" to your feeds?",
+                    text = stringResource(CoreUiR.string.core_ui_dialog_add_feed_message, state.feedPreviewTitle),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -352,10 +356,10 @@ private fun ConfirmFeedDialog(
             TextButton(
                 onClick = viewModel::confirmAddFeed,
                 enabled = !state.isSaving,
-            ) { Text(if (state.isSaving) "Adding…" else "Add") }
+            ) { Text(stringResource(if (state.isSaving) CoreUiR.string.core_ui_action_adding else CoreUiR.string.core_ui_action_add)) }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::backToFeedUrl) { Text("Back") }
+            TextButton(onClick = viewModel::backToFeedUrl) { Text(stringResource(CoreUiR.string.core_ui_action_back)) }
         },
     )
 }
@@ -364,7 +368,7 @@ private fun ConfirmFeedDialog(
 private fun FolderEditorDialog(feedId: String, state: FeedsUiState, viewModel: FeedsViewModel) {
     AlertDialog(
         onDismissRequest = viewModel::closeFolderEditor,
-        title = { Text("Folder for ${state.folderEditorFeedTitle}") },
+        title = { Text(stringResource(CoreUiR.string.core_ui_dialog_folder_for_title, state.folderEditorFeedTitle)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Row(
@@ -377,7 +381,7 @@ private fun FolderEditorDialog(feedId: String, state: FeedsUiState, viewModel: F
                         selected = state.selectedFolderId == null,
                         onClick = { viewModel.selectFolder(null) },
                     )
-                    Text("No folder")
+                    Text(stringResource(CoreUiR.string.core_ui_label_no_folder))
                 }
                 state.folders.forEach { folder ->
                     Row(
@@ -397,12 +401,12 @@ private fun FolderEditorDialog(feedId: String, state: FeedsUiState, viewModel: F
                 TextField(
                     value = state.newFolderNameInput,
                     onValueChange = viewModel::onNewFolderChanged,
-                    label = { Text("New folder") },
+                    label = { Text(stringResource(CoreUiR.string.core_ui_label_new_folder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 TextButton(onClick = { viewModel.addFolder(state.newFolderNameInput) }) {
-                    Text("Create folder")
+                    Text(stringResource(CoreUiR.string.core_ui_action_create_folder))
                 }
             }
         },
@@ -410,10 +414,10 @@ private fun FolderEditorDialog(feedId: String, state: FeedsUiState, viewModel: F
             TextButton(
                 onClick = { viewModel.setFeedFolder(feedId, state.selectedFolderId) },
                 enabled = !state.isSaving,
-            ) { Text("Save") }
+            ) { Text(stringResource(CoreUiR.string.core_ui_action_save)) }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::closeFolderEditor) { Text("Cancel") }
+            TextButton(onClick = viewModel::closeFolderEditor) { Text(stringResource(CoreUiR.string.core_ui_action_cancel)) }
         },
     )
 }
@@ -426,29 +430,29 @@ private fun FolderNameEditorDialog(
 ) {
     AlertDialog(
         onDismissRequest = viewModel::closeFolderNameEditor,
-        title = { Text("Edit folder") },
+        title = { Text(stringResource(CoreUiR.string.core_ui_dialog_edit_folder_title)) },
         text = {
             Column {
                 TextField(
                     value = state.editingFolderName,
                     onValueChange = viewModel::onEditingFolderNameChanged,
-                    label = { Text("Folder name") },
+                    label = { Text(stringResource(CoreUiR.string.core_ui_label_folder_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = { viewModel.removeFolder(folderId) }) {
-                    Text("Delete folder")
+                    Text(stringResource(CoreUiR.string.core_ui_action_delete_folder))
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = { viewModel.renameFolder(folderId, state.editingFolderName) }) {
-                Text("Save")
+                Text(stringResource(CoreUiR.string.core_ui_action_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::closeFolderNameEditor) { Text("Cancel") }
+            TextButton(onClick = viewModel::closeFolderNameEditor) { Text(stringResource(CoreUiR.string.core_ui_action_cancel)) }
         },
     )
 }

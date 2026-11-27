@@ -1,5 +1,6 @@
 package com.zigzag.syndicate.core.ui.components
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,8 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,10 +53,18 @@ import java.net.URI
 fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditFolder: () -> Unit) {
     val faviconBase = feed.siteUrl?.takeIf { it.isNotBlank() } ?: feed.url
     val faviconUrls = remember(faviconBase) { faviconCandidates(faviconBase) }
+    val stateLabel = stringResource(
+        if (feed.unreadCount > 0) R.string.core_ui_state_unread else R.string.core_ui_state_read,
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onFeedClick),
+            .clickable(onClick = onFeedClick)
+            .semantics {
+                role = Role.Button
+                contentDescription = feed.title
+                stateDescription = stateLabel
+            },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -87,8 +102,13 @@ fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditFolder: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             UnreadBadge(count = feed.unreadCount)
             Spacer(Modifier.width(8.dp))
-            TextButton(onClick = onEditFolder) {
-                Text(text = "Folder")
+            TextButton(
+                onClick = onEditFolder,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .contentDescriptionRes(R.string.core_ui_cd_change_folder, feed.title),
+            ) {
+                Text(text = stringResource(R.string.core_ui_label_folder))
             }
         }
     }
@@ -106,10 +126,18 @@ fun FolderRow(
     } else {
         MaterialTheme.colorScheme.surfaceContainer
     }
+    val stateLabel = stringResource(
+        if (folder.unreadCount > 0) R.string.core_ui_state_unread else R.string.core_ui_state_read,
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics {
+                role = Role.Button
+                contentDescription = folder.name
+                stateDescription = stateLabel
+            },
         color = containerColor,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -127,8 +155,9 @@ fun FolderRow(
             )
             Spacer(Modifier.width(8.dp))
             UnreadBadge(count = folder.unreadCount)
+            val editDescription = stringResource(R.string.core_ui_cd_edit_folder, folder.name)
             IconButton(onClick = onEdit, modifier = Modifier.semantics {
-                contentDescription = "Edit folder ${folder.name}"
+                contentDescription = editDescription
             }) {
                 Icon(painter = painterResource(R.drawable.core_ui_ic_edit), contentDescription = null)
             }
@@ -152,10 +181,26 @@ fun ArticleRow(article: Article, onRead: () -> Unit) {
     val faviconBaseUrl = article.feedSiteUrl?.takeIf { it.isNotBlank() } ?: article.link
     val faviconUrls = remember(faviconBaseUrl) { faviconCandidates(faviconBaseUrl) }
 
+    val stateLabel = stringResource(
+        if (article.isRead) R.string.core_ui_state_read else R.string.core_ui_state_unread,
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onRead),
+            .clickable(onClick = onRead)
+            .clearAndSetSemantics {
+                role = Role.Button
+                contentDescription = listOfNotNull(
+                    article.title,
+                    article.feedTitle,
+                    dateLabel.ifBlank { null },
+                ).joinToString(", ")
+                stateDescription = stateLabel
+                onClick {
+                    onRead()
+                    true
+                }
+            },
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.medium,
     ) {

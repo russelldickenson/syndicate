@@ -1,5 +1,7 @@
 package com.zigzag.syndicate.core.ui.components
 
+import com.zigzag.syndicate.core.ui.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -84,7 +86,7 @@ fun ErrorMessage(message: String, onRetry: (() -> Unit)? = null) {
         if (onRetry != null) {
             Spacer(Modifier.height(8.dp))
             TextButton(onClick = onRetry) {
-                Text(text = "Retry")
+                Text(text = stringResource(R.string.core_ui_action_retry))
             }
         }
     }

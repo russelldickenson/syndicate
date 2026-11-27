@@ -1,5 +1,9 @@
 package com.zigzag.syndicate.feature.articles.presentation
 
+import androidx.compose.ui.res.stringResource
+import com.zigzag.syndicate.core.ui.components.contentDescriptionRes
+import com.zigzag.syndicate.core.ui.components.stateDescriptionRes
+import com.zigzag.syndicate.core.ui.util.labelRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,16 +108,16 @@ internal fun ArticlesScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = onOpenDrawer,
-                        modifier = Modifier.semantics { contentDescription = "Open navigation" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
                     ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
                 },
                 actions = {
                     IconToggleButton(
                         checked = state.unreadOnly,
                         onCheckedChange = { viewModel.toggleUnreadOnly() },
-                        modifier = Modifier.semantics {
-                            contentDescription = if (state.unreadOnly) "Show all articles" else "Show unread only"
-                        },
+                        modifier = Modifier
+                            .contentDescriptionRes(if (state.unreadOnly) CoreUiR.string.core_ui_cd_show_all_articles else CoreUiR.string.core_ui_cd_show_unread_only)
+                            .stateDescriptionRes(if (state.unreadOnly) CoreUiR.string.core_ui_state_on else CoreUiR.string.core_ui_state_off),
                     ) {
                         Icon(
                             painter = painterResource(CoreUiR.drawable.core_ui_ic_mark_email_unread),
@@ -128,7 +132,7 @@ internal fun ArticlesScreen(
                     }
                     IconButton(
                         onClick = viewModel::showMarkAllReadConfirmation,
-                        modifier = Modifier.semantics { contentDescription = "Mark all as read" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_mark_all_read),
                     ) {
                         Icon(
                             painter = painterResource(CoreUiR.drawable.core_ui_ic_mark_email_read),
@@ -138,7 +142,7 @@ internal fun ArticlesScreen(
                     }
                     IconButton(
                         onClick = { showSortSheet = true },
-                        modifier = Modifier.semantics { contentDescription = "Sort articles" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_sort_articles),
                     ) {
                         Icon(
                             painter = painterResource(CoreUiR.drawable.core_ui_ic_sort),
@@ -189,17 +193,17 @@ internal fun ArticlesScreen(
 
             if (!state.isLoading && state.articles.isEmpty()) {
                 EmptyState(
-                    title = "Nothing here yet",
+                    title = stringResource(CoreUiR.string.core_ui_empty_title),
                     message = when {
                         state.scope is ArticleScope.Favourites && state.hasFeeds ->
-                            "Tap the heart on an article to save it here."
+                            stringResource(CoreUiR.string.core_ui_empty_favourites)
                         !state.hasFeeds ->
-                            "Add a feed to start reading your favorite sites."
+                            stringResource(CoreUiR.string.core_ui_empty_no_feeds)
                         state.unreadOnly ->
-                            "You're all caught up. Switch to All to see read articles."
-                        else -> "Articles from your feeds will appear here."
+                            stringResource(CoreUiR.string.core_ui_empty_unread)
+                        else -> stringResource(CoreUiR.string.core_ui_empty_articles)
                     },
-                    actionLabel = if (state.hasFeeds) "Browse feeds" else "Add feeds",
+                    actionLabel = stringResource(if (state.hasFeeds) CoreUiR.string.core_ui_action_browse_feeds else CoreUiR.string.core_ui_action_add_feeds),
                     onAction = if (state.hasFeeds) onNavigateToFeeds else onAddFeed,
                 )
             } else {
@@ -275,11 +279,11 @@ internal fun ArticlesScreen(
 
     if (showSortSheet) {
         SortSheet(
-            title = "Sort articles",
+            title = stringResource(CoreUiR.string.core_ui_label_sort_articles),
             options = ArticleSort.entries,
             selected = state.sort,
             onSelect = viewModel::setSort,
-            label = { it.label },
+            label = { stringResource(it.labelRes()) },
             onDismiss = { showSortSheet = false },
         )
     }
@@ -287,13 +291,13 @@ internal fun ArticlesScreen(
     if (state.showConfirmMarkAllRead) {
         AlertDialog(
             onDismissRequest = viewModel::dismissMarkAllReadConfirmation,
-            title = { Text("Mark all as read?") },
-            text = { Text("This marks every article in this view as read. They stay in the list, but unread-only view will be empty afterwards.") },
+            title = { Text(stringResource(CoreUiR.string.core_ui_dialog_mark_all_title)) },
+            text = { Text(stringResource(CoreUiR.string.core_ui_dialog_mark_all_message)) },
             confirmButton = {
-                TextButton(onClick = viewModel::confirmMarkAllRead) { Text("Mark all read") }
+                TextButton(onClick = viewModel::confirmMarkAllRead) { Text(stringResource(CoreUiR.string.core_ui_action_mark_all_read)) }
             },
             dismissButton = {
-                TextButton(onClick = viewModel::dismissMarkAllReadConfirmation) { Text("Cancel") }
+                TextButton(onClick = viewModel::dismissMarkAllReadConfirmation) { Text(stringResource(CoreUiR.string.core_ui_action_cancel)) }
             },
         )
     }

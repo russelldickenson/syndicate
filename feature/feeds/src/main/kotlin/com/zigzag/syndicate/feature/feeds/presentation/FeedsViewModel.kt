@@ -13,6 +13,8 @@ import com.zigzag.syndicate.core.domain.model.UserSettings
 import com.zigzag.syndicate.core.domain.repository.ArticleRepository
 import com.zigzag.syndicate.core.domain.repository.FeedRepository
 import com.zigzag.syndicate.core.domain.repository.SettingsRepository
+import com.zigzag.syndicate.core.ui.R as CoreUiR
+import com.zigzag.syndicate.core.ui.util.StringProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,7 @@ class FeedsViewModel @Inject constructor(
     private val feedRepository: FeedRepository,
     articleRepository: ArticleRepository,
     private val settingsRepository: SettingsRepository,
+    private val strings: StringProvider,
 ) : ViewModel() {
 
     private val feedSort = MutableStateFlow(FeedSort.NAME)
@@ -94,7 +97,7 @@ class FeedsViewModel @Inject constructor(
     fun previewFeed(url: String) {
         val trimmed = url.trim()
         if (trimmed.isBlank()) {
-            errorMessage.value = "Enter a feed URL."
+            errorMessage.value = strings.string(CoreUiR.string.core_ui_error_enter_feed_url)
             return
         }
         dialog.updateCopy { copy(isSaving = true) }
@@ -146,7 +149,7 @@ class FeedsViewModel @Inject constructor(
     fun removeFeed(id: String) {
         viewModelScope.launch {
             runCatching { feedRepository.removeFeed(id) }
-                .onFailure { errorMessage.value = "Couldn't remove feed: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_remove_feed, it.message.orUnknown()) }
         }
     }
 
@@ -156,7 +159,7 @@ class FeedsViewModel @Inject constructor(
             runCatching { feedRepository.setFeedFolder(feedId, folderId) }
                 .onSuccess { dialog.updateCopy { copy(folderEditorFeedId = null, isSaving = false) } }
                 .onFailure {
-                    errorMessage.value = "Couldn't update folder: ${it.message.orUnknown()}"
+                    errorMessage.value = strings.string(CoreUiR.string.core_ui_error_update_folder, it.message.orUnknown())
                     dialog.updateCopy { copy(isSaving = false) }
                 }
         }
@@ -165,7 +168,7 @@ class FeedsViewModel @Inject constructor(
     fun addFolder(name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            errorMessage.value = "Enter a folder name."
+            errorMessage.value = strings.string(CoreUiR.string.core_ui_error_enter_folder_name)
             return
         }
         viewModelScope.launch {
@@ -176,7 +179,7 @@ class FeedsViewModel @Inject constructor(
                     }
                     errorMessage.value = null
                 },
-                onFailure = { errorMessage.value = "Couldn't add folder: ${it.message.orUnknown()}" },
+                onFailure = { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_add_folder, it.message.orUnknown()) },
             )
         }
     }
@@ -184,13 +187,13 @@ class FeedsViewModel @Inject constructor(
     fun renameFolder(folderId: String, name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            errorMessage.value = "Enter a folder name."
+            errorMessage.value = strings.string(CoreUiR.string.core_ui_error_enter_folder_name)
             return
         }
         viewModelScope.launch {
             runCatching { feedRepository.renameFolder(folderId, trimmed) }
                 .onSuccess { dialog.updateCopy { copy(editingFolderId = null) } }
-                .onFailure { errorMessage.value = "Couldn't rename folder: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_rename_folder, it.message.orUnknown()) }
         }
     }
 
@@ -198,7 +201,7 @@ class FeedsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { feedRepository.removeFolder(folderId) }
                 .onSuccess { dialog.updateCopy { copy(editingFolderId = null) } }
-                .onFailure { errorMessage.value = "Couldn't remove folder: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_remove_folder, it.message.orUnknown()) }
         }
     }
 
@@ -222,11 +225,15 @@ class FeedsViewModel @Inject constructor(
                     if (summary.failed > 0) {
                         val detail = summary.errors.firstOrNull()?.message
                         errorMessage.value =
-                            "Refreshed ${summary.succeeded} feed(s), ${summary.failed} failed" +
-                                detail?.let { ": $it" }.orEmpty()
+                            strings.plural(
+                                CoreUiR.plurals.core_ui_refresh_summary,
+                                summary.succeeded,
+                                summary.succeeded,
+                                summary.failed,
+                            ) + detail?.let { ": $it" }.orEmpty()
                     }
                 }
-                .onFailure { errorMessage.value = "Refresh failed: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_refresh, it.message.orUnknown()) }
             refreshing.value = false
         }
     }
@@ -304,7 +311,7 @@ class FeedsViewModel @Inject constructor(
                 )
             }
         } else {
-            errorMessage.value = "Couldn't add feed: ${throwable.message.orUnknown()}"
+            errorMessage.value = strings.string(CoreUiR.string.core_ui_error_add_feed, throwable.message.orUnknown())
             dialog.updateCopy { copy(isSaving = false) }
         }
     }
@@ -321,7 +328,7 @@ class FeedsViewModel @Inject constructor(
         update { it.transform() }
     }
 
-    private fun String?.orUnknown(): String = takeIf { !isNullOrBlank() } ?: "unknown error"
+    private fun String?.orUnknown(): String = takeIf { !isNullOrBlank() } ?: strings.string(CoreUiR.string.core_ui_error_unknown)
 
     private data class FeedData(
         val feeds: List<Feed>,

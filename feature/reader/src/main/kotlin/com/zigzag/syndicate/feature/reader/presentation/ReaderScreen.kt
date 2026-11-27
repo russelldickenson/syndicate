@@ -1,5 +1,9 @@
 package com.zigzag.syndicate.feature.reader.presentation
 
+import com.zigzag.syndicate.core.ui.components.contentDescriptionRes
+import com.zigzag.syndicate.core.ui.components.stateDescriptionRes
+import com.zigzag.syndicate.core.ui.R as CoreUiR
+import androidx.compose.ui.res.stringResource
 import android.content.Intent
 import android.net.Uri
 import android.view.GestureDetector
@@ -41,7 +45,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -193,28 +196,28 @@ internal fun ReaderScreen(
                     IconButton(
                         onClick = onPrevious,
                         enabled = canGoPrevious,
-                        modifier = Modifier.semantics { contentDescription = "Previous article" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_previous_article),
                     ) {
                         Icon(painterResource(R.drawable.feature_reader_ic_previous), null)
                     }
                     IconButton(
                         onClick = onNext,
                         enabled = canGoNext,
-                        modifier = Modifier.semantics { contentDescription = "Next article" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_next_article),
                     ) {
                         Icon(painterResource(R.drawable.feature_reader_ic_next), null)
                     }
                     IconButton(
                         onClick = openOriginal,
                         enabled = !link.isNullOrBlank(),
-                        modifier = Modifier.semantics { contentDescription = "View original article" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_view_original_article),
                     ) {
                         Icon(painterResource(R.drawable.feature_reader_ic_open_original), null)
                     }
                     IconButton(
                         onClick = shareArticle,
                         enabled = !link.isNullOrBlank(),
-                        modifier = Modifier.semantics { contentDescription = "Share article" },
+                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_share_article),
                     ) {
                         Icon(painterResource(R.drawable.feature_reader_ic_share), null)
                     }
@@ -239,7 +242,7 @@ internal fun ReaderScreen(
                         // IconButton centers its 24dp icon inside a 48dp touch target;
                         // offset it so the arrow lines up with the title and body text.
                         .offset(x = (-12).dp)
-                        .semantics { contentDescription = "Back" },
+                        .contentDescriptionRes(CoreUiR.string.core_ui_cd_back),
                 ) { Icon(
                     painter = painterResource(
                         com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_arrow_back,
@@ -249,13 +252,17 @@ internal fun ReaderScreen(
                 Spacer(Modifier.weight(1f))
                 IconButton(
                     onClick = onToggleFavourite,
-                    modifier = Modifier.semantics {
-                        contentDescription = if (isFavourite) {
-                            "Remove from favourites"
-                        } else {
-                            "Add to favourites"
-                        }
-                    },
+                    modifier = Modifier
+                        .contentDescriptionRes(
+                            if (isFavourite) {
+                                CoreUiR.string.core_ui_cd_remove_from_favourites
+                            } else {
+                                CoreUiR.string.core_ui_cd_add_to_favourites
+                            },
+                        )
+                        .stateDescriptionRes(
+                            if (isFavourite) CoreUiR.string.core_ui_state_favourite else CoreUiR.string.core_ui_state_not_favourite,
+                        ),
                 ) {
                     Icon(
                         painter = painterResource(
@@ -272,7 +279,7 @@ internal fun ReaderScreen(
                     onClick = { showAppearanceSheet = true },
                     modifier = Modifier
                         .offset(x = 12.dp)
-                        .semantics { contentDescription = "Reading font and size" },
+                        .contentDescriptionRes(CoreUiR.string.core_ui_cd_reading_font_and_size),
                 ) { Icon(
                         painter = painterResource(
                             com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_format_size,
@@ -403,15 +410,15 @@ private fun ReadingAppearanceSheet(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
             Text(
-                text = "Reading appearance",
+                text = stringResource(CoreUiR.string.core_ui_title_reading_appearance),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            SectionHeader("Font")
+            SectionHeader(stringResource(CoreUiR.string.core_ui_label_font))
             ArticleFontChipSelector(selected = font, onSelect = onFontChange)
-            SectionHeader("Text size")
+            SectionHeader(stringResource(CoreUiR.string.core_ui_label_text_size))
             ArticleFontSizeSelector(selected = fontSize, onSelect = onFontSizeChange)
             ArticleFontPreview(font = font, size = fontSize)
         }

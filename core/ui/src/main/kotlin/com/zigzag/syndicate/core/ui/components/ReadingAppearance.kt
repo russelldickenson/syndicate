@@ -1,5 +1,7 @@
 package com.zigzag.syndicate.core.ui.components
 
+import com.zigzag.syndicate.core.ui.util.labelRes
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,7 +60,7 @@ fun ArticleFontSizeSelector(
                     index = option.ordinal,
                     count = ArticleFontSize.entries.size,
                 ),
-            ) { Text(option.label) }
+            ) { Text(stringResource(option.labelRes())) }
         }
     }
 }
@@ -103,7 +105,7 @@ fun ArticleFontPreview(
         shape = MaterialTheme.shapes.medium,
     ) {
         Text(
-            text = "The quick brown fox jumps over the lazy dog",
+            text = stringResource(R.string.core_ui_preview_text),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontFamily = articleFontFamily(font),
                 fontSize = articleFontSizeSp(size),

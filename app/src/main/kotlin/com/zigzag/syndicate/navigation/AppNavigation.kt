@@ -1,5 +1,7 @@
 package com.zigzag.syndicate.navigation
 
+import com.zigzag.syndicate.core.ui.R as CoreUiR
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.DrawerValue
@@ -143,7 +145,7 @@ fun AppNavigation() {
         entry<AppDestination.ArticlesAll> {
             ArticlesRoute(
                 scope = ArticleScope.All,
-                title = "All articles",
+                title = stringResource(CoreUiR.string.core_ui_title_all_articles),
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
@@ -153,7 +155,7 @@ fun AppNavigation() {
         entry<AppDestination.ArticlesUnread> {
             ArticlesRoute(
                 scope = ArticleScope.Unread,
-                title = "Unread",
+                title = stringResource(CoreUiR.string.core_ui_title_unread),
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
@@ -163,7 +165,7 @@ fun AppNavigation() {
         entry<AppDestination.ArticlesFavourites> {
             ArticlesRoute(
                 scope = ArticleScope.Favourites,
-                title = "Favourites",
+                title = stringResource(CoreUiR.string.core_ui_title_favourites),
                 onOpenArticles = ::openArticles,
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,

@@ -1,5 +1,7 @@
 package com.zigzag.syndicate.core.ui.components
 
+import com.zigzag.syndicate.core.ui.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +21,7 @@ fun <T> SortSheet(
     options: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -37,7 +39,7 @@ fun <T> SortSheet(
                 leadingContent = {
                     if (option == selected) {
                         Text(
-                            text = "✓",
+                            text = stringResource(R.string.core_ui_checkmark),
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }

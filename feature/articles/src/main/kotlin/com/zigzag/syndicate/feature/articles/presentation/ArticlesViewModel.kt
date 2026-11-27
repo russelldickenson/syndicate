@@ -10,6 +10,8 @@ import com.zigzag.syndicate.core.domain.model.UserSettings
 import com.zigzag.syndicate.core.domain.repository.ArticleRepository
 import com.zigzag.syndicate.core.domain.repository.FeedRepository
 import com.zigzag.syndicate.core.domain.repository.SettingsRepository
+import com.zigzag.syndicate.core.ui.R as CoreUiR
+import com.zigzag.syndicate.core.ui.util.StringProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +31,7 @@ class ArticlesViewModel @Inject constructor(
     private val articleRepository: ArticleRepository,
     private val settingsRepository: SettingsRepository,
     private val feedRepository: FeedRepository,
+    private val strings: StringProvider,
 ) : ViewModel() {
 
     private val scope = MutableStateFlow<ArticleScope>(ArticleScope.All)
@@ -36,7 +39,7 @@ class ArticlesViewModel @Inject constructor(
     private val sort = MutableStateFlow(ArticleSort.NEWEST)
     private val loading = MutableStateFlow(true)
     private val errorMessage = MutableStateFlow<String?>(null)
-    private val scopeTitle = MutableStateFlow("All articles")
+    private val scopeTitle = MutableStateFlow(strings.string(CoreUiR.string.core_ui_title_all_articles))
     private val confirmMarkAllRead = MutableStateFlow(false)
 
     private val query =
@@ -135,7 +138,7 @@ class ArticlesViewModel @Inject constructor(
     fun markAllRead() {
         viewModelScope.launch {
             runCatching { articleRepository.markAllRead(scope.value) }
-                .onFailure { errorMessage.value = "Couldn't mark all as read: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_mark_all_read, it.message.orUnknown()) }
         }
     }
 
@@ -155,7 +158,7 @@ class ArticlesViewModel @Inject constructor(
     fun markRead(articleId: String) {
         viewModelScope.launch {
             runCatching { articleRepository.markRead(articleId) }
-                .onFailure { errorMessage.value = "Couldn't mark as read: ${it.message.orUnknown()}" }
+                .onFailure { errorMessage.value = strings.string(CoreUiR.string.core_ui_error_mark_read, it.message.orUnknown()) }
         }
     }
 
@@ -165,31 +168,31 @@ class ArticlesViewModel @Inject constructor(
 
     private fun titleFor(currentScope: ArticleScope): String =
         when (currentScope) {
-            ArticleScope.All -> "All articles"
-            ArticleScope.Unread -> "Unread"
-            ArticleScope.Favourites -> "Favourites"
-            is ArticleScope.ForFeed -> "Feed"
-            is ArticleScope.ForFolder -> "Folder"
+            ArticleScope.All -> strings.string(CoreUiR.string.core_ui_title_all_articles)
+            ArticleScope.Unread -> strings.string(CoreUiR.string.core_ui_title_unread)
+            ArticleScope.Favourites -> strings.string(CoreUiR.string.core_ui_title_favourites)
+            is ArticleScope.ForFeed -> strings.string(CoreUiR.string.core_ui_label_feed)
+            is ArticleScope.ForFolder -> strings.string(CoreUiR.string.core_ui_label_folder)
         }
 
     private suspend fun resolveTitle(currentScope: ArticleScope): String =
         when (currentScope) {
-            ArticleScope.All -> "All articles"
-            ArticleScope.Unread -> "Unread"
-            ArticleScope.Favourites -> "Favourites"
+            ArticleScope.All -> strings.string(CoreUiR.string.core_ui_title_all_articles)
+            ArticleScope.Unread -> strings.string(CoreUiR.string.core_ui_title_unread)
+            ArticleScope.Favourites -> strings.string(CoreUiR.string.core_ui_title_favourites)
             is ArticleScope.ForFeed ->
                 feedRepository.observeFeeds(FeedSort.NAME)
                     .firstOrNull()
                     ?.firstOrNull { it.id == currentScope.feedId }
-                    ?.title ?: "Feed"
+                    ?.title ?: strings.string(CoreUiR.string.core_ui_label_feed)
             is ArticleScope.ForFolder ->
                 feedRepository.observeFolders(FolderSort.NAME)
                     .firstOrNull()
                     ?.firstOrNull { it.id == currentScope.folderId }
-                    ?.name ?: "Folder"
+                    ?.name ?: strings.string(CoreUiR.string.core_ui_label_folder)
         }
 
-    private fun String?.orUnknown(): String = takeIf { !isNullOrBlank() } ?: "unknown error"
+    private fun String?.orUnknown(): String = takeIf { !isNullOrBlank() } ?: strings.string(CoreUiR.string.core_ui_error_unknown)
 
     private data class ArticleQuery(
         val scope: ArticleScope,

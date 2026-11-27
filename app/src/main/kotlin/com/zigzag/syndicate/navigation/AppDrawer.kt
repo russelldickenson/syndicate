@@ -1,5 +1,6 @@
 package com.zigzag.syndicate.navigation
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,7 +63,7 @@ fun AppDrawer(
                     AppIcon(modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        text = "Syndicate",
+                        text = stringResource(CoreUiR.string.core_ui_app_name),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -68,7 +72,7 @@ fun AppDrawer(
             }
             item(key = "unread") {
                 DrawerRow(
-                    label = "Unread",
+                    label = stringResource(CoreUiR.string.core_ui_title_unread),
                     iconRes = CoreUiR.drawable.core_ui_ic_star,
                     badge = state.unreadCounts.global,
                     selected = currentDestination == AppDestination.ArticlesUnread,
@@ -77,7 +81,7 @@ fun AppDrawer(
             }
             item(key = "all") {
                 DrawerRow(
-                    label = "All",
+                    label = stringResource(CoreUiR.string.core_ui_label_all),
                     iconRes = CoreUiR.drawable.core_ui_ic_menu,
                     selected = currentDestination == AppDestination.ArticlesAll,
                     onClick = { onNavigate(AppDestination.ArticlesAll) },
@@ -85,7 +89,7 @@ fun AppDrawer(
             }
             item(key = "favourites") {
                 DrawerRow(
-                    label = "Favourites",
+                    label = stringResource(CoreUiR.string.core_ui_title_favourites),
                     iconRes = CoreUiR.drawable.core_ui_ic_favorite,
                     selected = currentDestination == AppDestination.ArticlesFavourites,
                     onClick = { onNavigate(AppDestination.ArticlesFavourites) },
@@ -95,7 +99,7 @@ fun AppDrawer(
             val standaloneFeeds = state.feeds.filter { it.folderId == null }
             if (standaloneFeeds.isNotEmpty()) {
                 item(key = "feeds_header") {
-                    SectionHeader("Feeds")
+                    SectionHeader(stringResource(CoreUiR.string.core_ui_title_feeds))
                 }
                 items(items = standaloneFeeds, key = { "feed_${it.id}" }) { feed ->
                     FeedDrawerRow(
@@ -109,7 +113,7 @@ fun AppDrawer(
 
             if (state.folders.isNotEmpty()) {
                 item(key = "folders_header") {
-                    SectionHeader("Folders")
+                    SectionHeader(stringResource(CoreUiR.string.core_ui_label_folders))
                 }
                 items(items = state.folders, key = { "folder_${it.id}" }) { folder ->
                     DrawerRow(
@@ -138,7 +142,7 @@ fun AppDrawer(
             }
             item(key = "manage_feeds") {
                 DrawerRow(
-                    label = "Manage feeds",
+                    label = stringResource(CoreUiR.string.core_ui_label_manage_feeds),
                     iconRes = CoreUiR.drawable.core_ui_ic_flag,
                     selected = currentDestination is AppDestination.Feeds,
                     onClick = { onNavigate(AppDestination.Feeds()) },
@@ -146,7 +150,7 @@ fun AppDrawer(
             }
             item(key = "settings") {
                 DrawerRow(
-                    label = "Settings",
+                    label = stringResource(CoreUiR.string.core_ui_label_settings),
                     iconRes = CoreUiR.drawable.core_ui_ic_settings,
                     selected = currentDestination == AppDestination.Settings,
                     onClick = { onNavigate(AppDestination.Settings) },
@@ -191,11 +195,16 @@ private fun DrawerRow(
     favicon: Pair<String, String>? = null,
     startPadding: androidx.compose.ui.unit.Dp = 16.dp,
 ) {
+    val selectedLabel = if (selected) stringResource(CoreUiR.string.core_ui_state_selected) else null
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .semantics { contentDescription = label },
+            .semantics {
+                role = Role.Button
+                contentDescription = label
+                if (selectedLabel != null) stateDescription = selectedLabel
+            },
         color = if (selected) {
             MaterialTheme.colorScheme.secondaryContainer
         } else {
