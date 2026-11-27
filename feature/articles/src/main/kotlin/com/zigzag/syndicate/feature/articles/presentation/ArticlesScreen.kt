@@ -17,11 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MarkEmailRead
-import androidx.compose.material.icons.filled.MarkEmailUnread
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +53,7 @@ import com.zigzag.syndicate.core.ui.components.EmptyState
 import com.zigzag.syndicate.core.ui.components.ErrorMessage
 import com.zigzag.syndicate.core.ui.components.LoadingIndicator
 import com.zigzag.syndicate.core.ui.components.SortSheet
+import com.zigzag.syndicate.core.ui.R as CoreUiR
 import com.zigzag.syndicate.feature.articles.R
 
 @Composable
@@ -108,7 +105,7 @@ internal fun ArticlesScreen(
                     IconButton(
                         onClick = onOpenDrawer,
                         modifier = Modifier.semantics { contentDescription = "Open navigation" },
-                    ) { Icon(Icons.Filled.Menu, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
                 },
                 actions = {
                     IconToggleButton(
@@ -119,7 +116,7 @@ internal fun ArticlesScreen(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.MarkEmailUnread,
+                            painter = painterResource(CoreUiR.drawable.core_ui_ic_mark_email_unread),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = if (state.unreadOnly) {
@@ -134,7 +131,7 @@ internal fun ArticlesScreen(
                         modifier = Modifier.semantics { contentDescription = "Mark all as read" },
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.MarkEmailRead,
+                            painter = painterResource(CoreUiR.drawable.core_ui_ic_mark_email_read),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                         )
@@ -144,7 +141,7 @@ internal fun ArticlesScreen(
                         modifier = Modifier.semantics { contentDescription = "Sort articles" },
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Sort,
+                            painter = painterResource(CoreUiR.drawable.core_ui_ic_sort),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                         )

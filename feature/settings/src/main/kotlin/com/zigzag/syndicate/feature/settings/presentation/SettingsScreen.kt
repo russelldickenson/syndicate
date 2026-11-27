@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ import com.zigzag.syndicate.core.ui.components.ArticleFontChipSelector
 import com.zigzag.syndicate.core.ui.components.ArticleFontSizeSelector
 import com.zigzag.syndicate.core.ui.components.SectionHeader
 import com.zigzag.syndicate.core.ui.components.SortSheet
+import com.zigzag.syndicate.core.ui.R as CoreUiR
 import kotlinx.coroutines.launch
 
 @Composable
@@ -126,7 +129,12 @@ internal fun SettingsScreen(
                     IconButton(
                         onClick = onOpenDrawer,
                         modifier = Modifier.semantics { contentDescription = "Open navigation" },
-                    ) { Text("☰") }
+                    ) {
+                        Icon(
+                            painter = painterResource(CoreUiR.drawable.core_ui_ic_menu),
+                            contentDescription = null,
+                        )
+                    }
                 },
             )
         },

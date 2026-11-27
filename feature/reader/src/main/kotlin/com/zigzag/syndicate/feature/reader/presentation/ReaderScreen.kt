@@ -17,11 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -244,7 +240,12 @@ internal fun ReaderScreen(
                         // offset it so the arrow lines up with the title and body text.
                         .offset(x = (-12).dp)
                         .semantics { contentDescription = "Back" },
-                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
+                ) { Icon(
+                    painter = painterResource(
+                        com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_arrow_back,
+                    ),
+                    contentDescription = null,
+                ) }
                 Spacer(Modifier.weight(1f))
                 IconButton(
                     onClick = onToggleFavourite,
@@ -257,7 +258,13 @@ internal fun ReaderScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        painter = painterResource(
+                            if (isFavourite) {
+                                com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_favorite
+                            } else {
+                                com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_favorite_outline
+                            },
+                        ),
                         contentDescription = null,
                     )
                 }
@@ -266,7 +273,12 @@ internal fun ReaderScreen(
                     modifier = Modifier
                         .offset(x = 12.dp)
                         .semantics { contentDescription = "Reading font and size" },
-                ) { Icon(Icons.Filled.FormatSize, contentDescription = null) }
+                ) { Icon(
+                        painter = painterResource(
+                            com.zigzag.syndicate.core.ui.R.drawable.core_ui_ic_format_size,
+                        ),
+                        contentDescription = null,
+                    ) }
             }
 
             if (article != null) {

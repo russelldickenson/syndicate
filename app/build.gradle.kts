@@ -99,8 +99,6 @@ dependencies {
     implementation(libs.findLibrary("androidx-core").get())
     implementation(libs.findBundle("compose").get())
     implementation(libs.findLibrary("androidx-compose-material3").get())
-    implementation(libs.findLibrary("androidx-compose-material-icons-core").get())
-    implementation(libs.findLibrary("androidx-compose-material-icons-extended").get())
     implementation(libs.findLibrary("androidx-activity-compose").get())
     implementation(libs.findLibrary("androidx-navigation3-runtime").get())
     implementation(libs.findLibrary("androidx-navigation3-ui").get())

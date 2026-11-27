@@ -12,12 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.LinkAnnotation
@@ -60,6 +55,7 @@ import com.zigzag.syndicate.core.ui.components.LoadingIndicator
 import com.zigzag.syndicate.core.ui.components.SectionHeader
 import com.zigzag.syndicate.core.ui.components.SortSheet
 import com.zigzag.syndicate.core.ui.components.FolderRow
+import com.zigzag.syndicate.core.ui.R as CoreUiR
 
 @Composable
 fun FeedsRoute(
@@ -103,26 +99,26 @@ internal fun FeedsScreen(
                     IconButton(
                         onClick = onOpenDrawer,
                         modifier = Modifier.semantics { contentDescription = "Open navigation" },
-                    ) { Icon(Icons.Filled.Menu, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
                 },
                 actions = {
                     IconButton(
                         onClick = { showFeedSortSheet = true },
                         modifier = Modifier.semantics { contentDescription = "Sort feeds" },
-                    ) { Icon(Icons.Filled.Sort, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_sort), contentDescription = null) }
                     IconButton(
                         onClick = { showFolderSortSheet = true },
                         modifier = Modifier.semantics { contentDescription = "Sort folders" },
-                    ) { Icon(Icons.Filled.SwapVert, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_swap_vert), contentDescription = null) }
                     IconButton(
                         onClick = viewModel::refreshAll,
                         enabled = !state.isRefreshing,
                         modifier = Modifier.semantics { contentDescription = "Refresh feeds" },
-                    ) { Icon(Icons.Filled.Refresh, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_refresh), contentDescription = null) }
                     IconButton(
                         onClick = onNavigateToSettings,
                         modifier = Modifier.semantics { contentDescription = "Settings" },
-                    ) { Icon(Icons.Filled.Settings, contentDescription = null) }
+                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_settings), contentDescription = null) }
                 },
             )
         },

@@ -10,14 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Article
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.annotation.DrawableRes
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +34,7 @@ import com.zigzag.syndicate.core.ui.components.FaviconImage
 import com.zigzag.syndicate.core.ui.components.faviconCandidates
 import com.zigzag.syndicate.core.ui.components.SectionHeader
 import com.zigzag.syndicate.core.ui.components.UnreadBadge
+import com.zigzag.syndicate.core.ui.R as CoreUiR
 
 /**
  * The vertical navigation list: Feeds (All, Unread, every feed, manage), Folders,
@@ -75,7 +69,7 @@ fun AppDrawer(
             item(key = "unread") {
                 DrawerRow(
                     label = "Unread",
-                    icon = Icons.Filled.Star,
+                    iconRes = CoreUiR.drawable.core_ui_ic_star,
                     badge = state.unreadCounts.global,
                     selected = currentDestination == AppDestination.ArticlesUnread,
                     onClick = { onNavigate(AppDestination.ArticlesUnread) },
@@ -84,7 +78,7 @@ fun AppDrawer(
             item(key = "all") {
                 DrawerRow(
                     label = "All",
-                    icon = Icons.Filled.Menu,
+                    iconRes = CoreUiR.drawable.core_ui_ic_menu,
                     selected = currentDestination == AppDestination.ArticlesAll,
                     onClick = { onNavigate(AppDestination.ArticlesAll) },
                 )
@@ -92,7 +86,7 @@ fun AppDrawer(
             item(key = "favourites") {
                 DrawerRow(
                     label = "Favourites",
-                    icon = Icons.Filled.Favorite,
+                    iconRes = CoreUiR.drawable.core_ui_ic_favorite,
                     selected = currentDestination == AppDestination.ArticlesFavourites,
                     onClick = { onNavigate(AppDestination.ArticlesFavourites) },
                 )
@@ -120,7 +114,7 @@ fun AppDrawer(
                 items(items = state.folders, key = { "folder_${it.id}" }) { folder ->
                     DrawerRow(
                         label = folder.name,
-                        icon = Icons.Filled.Folder,
+                        iconRes = CoreUiR.drawable.core_ui_ic_folder,
                         badge = state.unreadCounts.perFolder[folder.id] ?: 0,
                         selected = (currentDestination as? AppDestination.FolderArticles)?.folderId == folder.id,
                         onClick = { onNavigate(AppDestination.FolderArticles(folder.id, folder.name)) },
@@ -145,7 +139,7 @@ fun AppDrawer(
             item(key = "manage_feeds") {
                 DrawerRow(
                     label = "Manage feeds",
-                    icon = Icons.Filled.Flag,
+                    iconRes = CoreUiR.drawable.core_ui_ic_flag,
                     selected = currentDestination is AppDestination.Feeds,
                     onClick = { onNavigate(AppDestination.Feeds()) },
                 )
@@ -153,7 +147,7 @@ fun AppDrawer(
             item(key = "settings") {
                 DrawerRow(
                     label = "Settings",
-                    icon = Icons.Filled.Settings,
+                    iconRes = CoreUiR.drawable.core_ui_ic_settings,
                     selected = currentDestination == AppDestination.Settings,
                     onClick = { onNavigate(AppDestination.Settings) },
                 )
@@ -178,7 +172,7 @@ private fun FeedDrawerRow(
     }
     DrawerRow(
         label = feed.title,
-        icon = Icons.Filled.Article,
+        iconRes = CoreUiR.drawable.core_ui_ic_article,
         favicon = candidates,
         badge = state.unreadCounts.perFeed[feed.id] ?: 0,
         selected = (currentDestination as? AppDestination.FeedArticles)?.feedId == feed.id,
@@ -190,7 +184,7 @@ private fun FeedDrawerRow(
 @Composable
 private fun DrawerRow(
     label: String,
-    icon: ImageVector,
+    @DrawableRes iconRes: Int,
     selected: Boolean,
     onClick: () -> Unit,
     badge: Int = 0,
@@ -220,7 +214,7 @@ private fun DrawerRow(
                     fallbackUrl = favicon.second,
                     fallback = {
                         Icon(
-                            imageVector = icon,
+                            painter = painterResource(iconRes),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -229,7 +223,7 @@ private fun DrawerRow(
                 )
             } else {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(iconRes),
                     contentDescription = null,
                     modifier = Modifier.width(24.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,

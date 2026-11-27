@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -39,6 +38,7 @@ import coil3.compose.AsyncImagePainter
 import com.zigzag.syndicate.core.domain.model.Article
 import com.zigzag.syndicate.core.domain.model.Feed
 import com.zigzag.syndicate.core.domain.model.Folder
+import com.zigzag.syndicate.core.ui.R
 import com.zigzag.syndicate.core.ui.util.formatArticleDateTime
 import java.net.URI
 
@@ -130,7 +130,7 @@ fun FolderRow(
             IconButton(onClick = onEdit, modifier = Modifier.semantics {
                 contentDescription = "Edit folder ${folder.name}"
             }) {
-                Icon(Icons.Filled.Edit, contentDescription = null)
+                Icon(painter = painterResource(R.drawable.core_ui_ic_edit), contentDescription = null)
             }
         }
     }
