@@ -3,9 +3,11 @@ package com.zigzag.syndicate.navigation
 import com.zigzag.syndicate.core.ui.R as CoreUiR
 import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +20,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import androidx.window.core.layout.WindowSizeClass
 import com.zigzag.syndicate.core.domain.model.ArticleScope
 import com.zigzag.syndicate.core.domain.model.Feed
 import com.zigzag.syndicate.core.domain.model.FeedSort
@@ -141,6 +144,10 @@ fun AppNavigation() {
     val openDrawer: () -> Unit = { coroutineScope.launch { drawerState.open() } }
     val openAddFeed: () -> Unit = { navigateTop(AppDestination.Feeds(openAddFeed = true)) }
 
+    val wideLayout = currentWindowAdaptiveInfo()
+        .windowSizeClass
+        .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+
     val entries = entryProvider<NavKey> {
         entry<AppDestination.ArticlesAll> {
             ArticlesRoute(
@@ -150,6 +157,8 @@ fun AppNavigation() {
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
         entry<AppDestination.ArticlesUnread> {
@@ -160,6 +169,8 @@ fun AppNavigation() {
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
         entry<AppDestination.ArticlesFavourites> {
@@ -170,6 +181,8 @@ fun AppNavigation() {
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
         entry<AppDestination.FolderArticles> { key ->
@@ -180,6 +193,8 @@ fun AppNavigation() {
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
         entry<AppDestination.FeedArticles> { key ->
@@ -192,6 +207,8 @@ fun AppNavigation() {
                 onNavigateToFeeds = { navigateTop(AppDestination.Feeds()) },
                 onAddFeed = openAddFeed,
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
         entry<AppDestination.Feeds> { key ->
@@ -199,6 +216,8 @@ fun AppNavigation() {
                 onNavigateToArticles = ::openScope,
                 onNavigateToSettings = { navigateTop(AppDestination.Settings) },
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
                 openAddFeed = key.openAddFeed,
             )
         }
@@ -212,6 +231,8 @@ fun AppNavigation() {
         entry<AppDestination.Settings> {
             SettingsRoute(
                 onOpenDrawer = openDrawer,
+
+                showNavigationIcon = !wideLayout,
             )
         }
     }
@@ -224,23 +245,37 @@ fun AppNavigation() {
         )
     }
 
-    // The reader screen owns a per-article action bar, so no drawer is shown while it is on top.
-    // The drawer itself stays inert there: there is no hamburger and edge-swipe cannot open a
-    // ModalNavigationDrawer over the reader's WebView because the WebView consumes those drags.
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = currentDestination !is AppDestination.Reader,
-        drawerContent = {
-            AppDrawer(
-                state = appDrawerState,
-                currentDestination = currentDestination as? AppDestination,
-                onNavigate = { destination ->
-                    coroutineScope.launch { drawerState.close() }
-                    navigateTop(destination)
-                },
-            )
-        },
-    ) {
-        navContent()
+    val onNavigateFromDrawer: (AppDestination) -> Unit = { destination ->
+        coroutineScope.launch { drawerState.close() }
+        navigateTop(destination)
+    }
+    if (wideLayout) {
+        PermanentNavigationDrawer(
+            drawerContent = {
+                AppPermanentDrawer(
+                    state = appDrawerState,
+                    currentDestination = currentDestination as? AppDestination,
+                    onNavigate = onNavigateFromDrawer,
+                )
+            },
+        ) {
+            navContent()
+        }
+    } else {
+        // On compact screens the drawer is modal; the reader keeps it closed because
+        // the WebView consumes the edge drags that would open it.
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            gesturesEnabled = currentDestination !is AppDestination.Reader,
+            drawerContent = {
+                AppDrawer(
+                    state = appDrawerState,
+                    currentDestination = currentDestination as? AppDestination,
+                    onNavigate = onNavigateFromDrawer,
+                )
+            },
+        ) {
+            navContent()
+        }
     }
 }

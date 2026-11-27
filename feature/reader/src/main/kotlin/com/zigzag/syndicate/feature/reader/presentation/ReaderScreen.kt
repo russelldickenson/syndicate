@@ -42,7 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -163,7 +164,9 @@ internal fun ReaderScreen(
     val dateLabel = article?.publishedAt
         ?.let { formatArticleDate(it, locale = dateLocale) }
         .orEmpty()
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val colorScheme = MaterialTheme.colorScheme
+    val bodyColor = colorScheme.onSurface.cssHex()
+    val linkColor = colorScheme.primary.cssHex()
 
     // Custom fonts are inlined into the HTML as a Base64 data URI so the WebView
     // can render them even though the article is loaded from a feed URL.
@@ -357,7 +360,7 @@ internal fun ReaderScreen(
                             }
                         },
                         update = { webView ->
-                            val loadKey = "$target|$articleFont|$articleFontSize|$dark"
+                            val loadKey = "$target|$articleFont|$articleFontSize|$bodyColor|$linkColor"
                             if (lastLoaded != loadKey) {
                                 isLoading = true
                                 if (!html.isNullOrBlank()) {
@@ -365,7 +368,8 @@ internal fun ReaderScreen(
                                         link,
                                         prepareArticleHtml(
                                             html.orEmpty(),
-                                            dark = dark,
+                                            textColor = bodyColor,
+                                            linkColor = linkColor,
                                             font = articleFont,
                                             fontSize = articleFontSize,
                                             embeddedFont = embeddedFont,
@@ -424,3 +428,5 @@ private fun ReadingAppearanceSheet(
         }
     }
 }
+
+private fun Color.cssHex(): String = "#%06X".format(toArgb() and 0xFFFFFF)

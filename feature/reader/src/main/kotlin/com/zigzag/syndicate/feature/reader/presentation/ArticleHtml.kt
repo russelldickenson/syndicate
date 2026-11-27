@@ -14,14 +14,13 @@ import com.zigzag.syndicate.core.domain.model.ArticleFontSize
  */
 internal fun prepareArticleHtml(
     content: String,
-    dark: Boolean = false,
+    textColor: String = "#1A1C23",
+    linkColor: String = "#4655A4",
     font: ArticleFont = ArticleFont.SANS_SERIF,
     fontSize: ArticleFontSize = ArticleFontSize.MEDIUM,
     embeddedFont: String? = null,
 ): String {
     val body = content.replace(DOCUMENT_TAGS, "")
-    val textColor = if (dark) "#E3E1EC" else "#1A1C23"
-    val linkColor = if (dark) "#B4C0FF" else "#4655A4"
     val fontFace = if (embeddedFont != null) {
         """
         @font-face {

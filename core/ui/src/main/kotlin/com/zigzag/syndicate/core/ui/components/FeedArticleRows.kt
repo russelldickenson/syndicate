@@ -69,7 +69,7 @@ fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditFolder: () -> Unit) {
         shape = MaterialTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (faviconUrls != null) {
@@ -81,7 +81,7 @@ fun FeedRow(feed: Feed, onFeedClick: () -> Unit, onEditFolder: () -> Unit) {
                         .size(24.dp)
                         .clip(RoundedCornerShape(6.dp)),
                 )
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(8.dp))
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -142,7 +142,7 @@ fun FolderRow(
         shape = MaterialTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(

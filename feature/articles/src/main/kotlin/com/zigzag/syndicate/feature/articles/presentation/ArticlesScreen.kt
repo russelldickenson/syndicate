@@ -67,6 +67,7 @@ fun ArticlesRoute(
     onNavigateToFeeds: () -> Unit,
     onAddFeed: () -> Unit,
     onOpenDrawer: () -> Unit,
+    showNavigationIcon: Boolean = true,
     title: String? = null,
     faviconBaseUrl: String? = null,
 ) {
@@ -83,6 +84,7 @@ fun ArticlesRoute(
         onNavigateToFeeds = onNavigateToFeeds,
         onAddFeed = onAddFeed,
         onOpenDrawer = onOpenDrawer,
+        showNavigationIcon = showNavigationIcon,
     )
 }
 
@@ -96,6 +98,7 @@ internal fun ArticlesScreen(
     onNavigateToFeeds: () -> Unit,
     onAddFeed: () -> Unit,
     onOpenDrawer: () -> Unit,
+    showNavigationIcon: Boolean = true,
 ) {
     var showSortSheet by remember { mutableStateOf(false) }
     val displayTitle = routeTitle ?: state.scopeTitle
@@ -105,11 +108,15 @@ internal fun ArticlesScreen(
         topBar = {
             TopAppBar(
                 title = {},
-                navigationIcon = {
-                    IconButton(
-                        onClick = onOpenDrawer,
-                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
-                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
+                navigationIcon = if (showNavigationIcon) {
+                    {
+                        IconButton(
+                            onClick = onOpenDrawer,
+                            modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
+                        ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
+                    }
+                } else {
+                    {}
                 },
                 actions = {
                     IconToggleButton(
@@ -162,7 +169,7 @@ internal fun ArticlesScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (faviconUrls != null) {
@@ -174,7 +181,7 @@ internal fun ArticlesScreen(
                             .size(28.dp)
                             .clip(RoundedCornerShape(7.dp)),
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(8.dp))
                 }
                 Text(
                     text = displayTitle,

@@ -103,6 +103,8 @@ dependencies {
     implementation(libs.findLibrary("androidx-navigation3-runtime").get())
     implementation(libs.findLibrary("androidx-navigation3-ui").get())
     implementation(libs.findLibrary("androidx-compose-material3-adaptive-navigation-suite").get())
+    implementation(libs.findLibrary("androidx-compose-material3-adaptive").get())
+    implementation(libs.findLibrary("androidx-window-core").get())
     implementation(libs.findLibrary("androidx-lifecycle-runtime-compose").get())
     implementation(libs.findLibrary("androidx-hilt-lifecycle-viewmodel-compose").get())
 }

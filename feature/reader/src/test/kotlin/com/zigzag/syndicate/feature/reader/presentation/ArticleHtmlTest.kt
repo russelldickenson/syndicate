@@ -26,9 +26,10 @@ class ArticleHtmlTest {
     }
 
     @Test
-    fun usesThemeAwareTextColors() {
-        assertTrue(prepareArticleHtml("x", dark = false).contains("color: #1A1C23;"))
-        assertTrue(prepareArticleHtml("x", dark = true).contains("color: #E3E1EC;"))
+    fun usesProvidedThemeColors() {
+        val prepared = prepareArticleHtml("x", textColor = "#112233", linkColor = "#445566")
+        assertTrue(prepared.contains("color: #112233;"))
+        assertTrue(prepared.contains("a { color: #445566; }"))
     }
 
     @Test

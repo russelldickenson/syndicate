@@ -65,6 +65,7 @@ fun FeedsRoute(
     onNavigateToArticles: (scope: ArticleScope) -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenDrawer: () -> Unit,
+    showNavigationIcon: Boolean = true,
     openAddFeed: Boolean = false,
 ) {
     val viewModel: FeedsViewModel = hiltViewModel()
@@ -80,6 +81,7 @@ fun FeedsRoute(
         onNavigateToArticles = onNavigateToArticles,
         onNavigateToSettings = onNavigateToSettings,
         onOpenDrawer = onOpenDrawer,
+        showNavigationIcon = showNavigationIcon,
     )
 }
 
@@ -90,6 +92,7 @@ internal fun FeedsScreen(
     onNavigateToArticles: (ArticleScope) -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenDrawer: () -> Unit,
+    showNavigationIcon: Boolean = true,
 ) {
     var showFeedSortSheet by remember { mutableStateOf(false) }
     var showFolderSortSheet by remember { mutableStateOf(false) }
@@ -98,11 +101,15 @@ internal fun FeedsScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(CoreUiR.string.core_ui_title_feeds)) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onOpenDrawer,
-                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
-                    ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
+                navigationIcon = if (showNavigationIcon) {
+                    {
+                        IconButton(
+                            onClick = onOpenDrawer,
+                            modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
+                        ) { Icon(painter = painterResource(CoreUiR.drawable.core_ui_ic_menu), contentDescription = null) }
+                    }
+                } else {
+                    {}
                 },
                 actions = {
                     IconButton(

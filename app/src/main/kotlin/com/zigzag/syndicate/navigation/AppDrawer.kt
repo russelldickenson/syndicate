@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,6 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,16 +54,38 @@ fun AppDrawer(
     modifier: Modifier = Modifier,
 ) {
     ModalDrawerSheet(modifier = modifier) {
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        AppDrawerContent(state, currentDestination, onNavigate)
+    }
+}
+
+@Composable
+fun AppPermanentDrawer(
+    state: DrawerViewModelState,
+    currentDestination: AppDestination?,
+    onNavigate: (AppDestination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    PermanentDrawerSheet(modifier = modifier) {
+        AppDrawerContent(state, currentDestination, onNavigate)
+    }
+}
+
+@Composable
+private fun AppDrawerContent(
+    state: DrawerViewModelState,
+    currentDestination: AppDestination?,
+    onNavigate: (AppDestination) -> Unit,
+) {
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
             item(key = "header") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AppIcon(modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(CoreUiR.string.core_ui_app_name),
                         style = MaterialTheme.typography.titleLarge,
@@ -156,9 +180,8 @@ fun AppDrawer(
                     onClick = { onNavigate(AppDestination.Settings) },
                 )
             }
-            item(key = "bottom_spacer") {
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+        item(key = "bottom_spacer") {
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -214,7 +237,9 @@ private fun DrawerRow(
     ) {
         Row(
             // Indent only the leading content; the badge stays flush with the panel's right edge.
-            modifier = Modifier.padding(start = startPadding, top = 12.dp, end = 16.dp, bottom = 12.dp),
+            modifier = Modifier
+                .padding(start = startPadding, top = 8.dp, end = 16.dp, bottom = 8.dp)
+                .heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (favicon != null) {
@@ -238,7 +263,7 @@ private fun DrawerRow(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,

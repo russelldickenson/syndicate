@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
@@ -59,7 +60,7 @@ import com.zigzag.syndicate.core.ui.R as CoreUiR
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsRoute(onOpenDrawer: () -> Unit) {
+fun SettingsRoute(onOpenDrawer: () -> Unit, showNavigationIcon: Boolean = true) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
@@ -67,6 +68,7 @@ fun SettingsRoute(onOpenDrawer: () -> Unit) {
         settings = settings,
         viewModel = viewModel,
         onOpenDrawer = onOpenDrawer,
+        showNavigationIcon = showNavigationIcon,
     )
 }
 
@@ -75,6 +77,7 @@ internal fun SettingsScreen(
     settings: UserSettings,
     viewModel: SettingsViewModel,
     onOpenDrawer: () -> Unit,
+    showNavigationIcon: Boolean = true,
 ) {
     var sortSheet by remember { mutableStateOf<SortKind?>(null) }
     val context = LocalContext.current
@@ -136,16 +139,20 @@ internal fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(CoreUiR.string.core_ui_app_name)) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onOpenDrawer,
-                        modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
-                    ) {
-                        Icon(
-                            painter = painterResource(CoreUiR.drawable.core_ui_ic_menu),
-                            contentDescription = null,
-                        )
+                navigationIcon = if (showNavigationIcon) {
+                    {
+                        IconButton(
+                            onClick = onOpenDrawer,
+                            modifier = Modifier.contentDescriptionRes(CoreUiR.string.core_ui_cd_open_navigation),
+                        ) {
+                            Icon(
+                                painter = painterResource(CoreUiR.drawable.core_ui_ic_menu),
+                                contentDescription = null,
+                            )
+                        }
                     }
+                } else {
+                    {}
                 },
             )
         },
@@ -223,7 +230,7 @@ internal fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
@@ -328,7 +335,8 @@ private fun PreferenceRow(
                     Modifier
                 },
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
